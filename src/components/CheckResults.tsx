@@ -1,6 +1,8 @@
-import { CheckCircle2, XCircle, AlertCircle, Globe, Lock, FileText, Gauge } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, XCircle, AlertCircle, Globe, Lock, FileText, Gauge, Download, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
+import { Button } from "./ui/button";
 
 export interface CheckResult {
   category: string;
@@ -15,6 +17,7 @@ export interface CheckResult {
 interface CheckResultsProps {
   results: CheckResult[];
   overallScore: number;
+  websiteUrl: string;
 }
 
 const iconMap = {
@@ -42,7 +45,78 @@ const statusConfig = {
   },
 };
 
-const CheckResults = ({ results, overallScore }: CheckResultsProps) => {
+const CheckResults = ({ results, overallScore, websiteUrl }: CheckResultsProps) => {
+  const [animatedScore, setAnimatedScore] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = overallScore;
+    const duration = 1500;
+    const increment = end / (duration / 16);
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setAnimatedScore(end);
+        clearInterval(timer);
+      } else {
+        setAnimatedScore(Math.floor(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [overallScore]);
+
+  const exportResults = () => {
+    const reportContent = `
+AdSense Eligibility Report
+Website: ${websiteUrl}
+Date: ${new Date().toLocaleDateString()}
+Overall Score: ${overallScore}%
+
+${results.map(category => `
+${category.category}
+${category.checks.map(check => `
+  ✓ ${check.name}: ${check.status.toUpperCase()}
+  ${check.message}
+`).join('\n')}
+`).join('\n')}
+    `.trim();
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `adsense-report-${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getRecommendations = () => {
+    const failed = results.flatMap(r => r.checks.filter(c => c.status === 'fail'));
+    if (failed.length === 0) return null;
+    
+    return (
+      <Card className="mb-8 border-destructive/50 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-destructive">Priority Actions Required</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            {failed.map((check, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <XCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">{check.name}</p>
+                  <p className="text-sm text-muted-foreground">{check.message}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    );
+  };
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
@@ -56,22 +130,34 @@ const CheckResults = ({ results, overallScore }: CheckResultsProps) => {
   };
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-16">
+    <section id="results" className="max-w-6xl mx-auto px-4 py-16 scroll-mt-20">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">Eligibility Results</h2>
         <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-semibold">Overall Score</span>
-            <span className={`text-2xl font-bold ${getScoreColor(overallScore)}`}>
-              {overallScore}%
-            </span>
+          <div className="inline-flex flex-col items-center gap-4 p-8 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-2xl border-2 border-primary/20 animate-fade-in">
+            <div className={`text-6xl font-bold ${getScoreColor(animatedScore)}`}>
+              {animatedScore}%
+            </div>
+            <p className="text-lg text-muted-foreground">Overall Score</p>
+            <Progress value={animatedScore} className="w-64 h-3" />
+            <p className={`text-sm font-medium ${getScoreColor(overallScore)}`}>
+              {getScoreLabel(overallScore)}
+            </p>
+            <div className="flex gap-3 mt-4">
+              <Button onClick={exportResults} variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export Report
+              </Button>
+              <Button onClick={() => window.open('https://www.google.com/adsense', '_blank')} variant="outline" size="sm">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Apply to AdSense
+              </Button>
+            </div>
           </div>
-          <Progress value={overallScore} className="h-3 mb-2" />
-          <p className={`text-sm font-medium ${getScoreColor(overallScore)}`}>
-            {getScoreLabel(overallScore)}
-          </p>
         </div>
       </div>
+
+      {getRecommendations()}
 
       <div className="grid md:grid-cols-2 gap-6">
         {results.map((result, idx) => {

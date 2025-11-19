@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import CheckResults, { CheckResult } from "@/components/CheckResults";
 import InfoSection from "@/components/InfoSection";
+import RecentChecks from "@/components/RecentChecks";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -9,6 +10,14 @@ const Index = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [results, setResults] = useState<CheckResult[] | null>(null);
   const [overallScore, setOverallScore] = useState(0);
+  const [recentChecks, setRecentChecks] = useState<Array<{ url: string; score: number; date: string }>>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("recentChecks");
+    if (saved) {
+      setRecentChecks(JSON.parse(saved));
+    }
+  }, []);
 
   const simulateCheck = async (websiteUrl: string): Promise<{ results: CheckResult[]; score: number }> => {
     // Simulate API delay
@@ -164,6 +173,17 @@ const Index = () => {
       setResults(checkResults);
       setOverallScore(score);
       
+      // Save to history
+      const newCheck = { url, score, date: new Date().toISOString() };
+      const updatedChecks = [newCheck, ...recentChecks.filter(c => c.url !== url)].slice(0, 5);
+      setRecentChecks(updatedChecks);
+      localStorage.setItem("recentChecks", JSON.stringify(updatedChecks));
+      
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+      
       if (score >= 80) {
         toast.success("Great! Your website is ready for AdSense");
       } else if (score >= 60) {
@@ -182,7 +202,11 @@ const Index = () => {
     <main className="min-h-screen bg-background">
       <Hero url={url} onUrlChange={setUrl} onCheck={handleCheck} isChecking={isChecking} />
       
-      {results && <CheckResults results={results} overallScore={overallScore} />}
+      {recentChecks.length > 0 && !results && (
+        <RecentChecks checks={recentChecks} onSelect={(selectedUrl) => setUrl(selectedUrl)} />
+      )}
+      
+      {results && <CheckResults results={results} overallScore={overallScore} websiteUrl={url} />}
       
       <InfoSection />
       

@@ -130,28 +130,43 @@ ${category.checks.map(check => `
   };
 
   return (
-    <section id="results" className="max-w-6xl mx-auto px-4 py-16 scroll-mt-20">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Eligibility Results</h2>
-        <div className="max-w-md mx-auto">
-          <div className="inline-flex flex-col items-center gap-4 p-8 bg-gradient-to-br from-primary/10 to-primary-glow/10 rounded-2xl border-2 border-primary/20 animate-fade-in">
-            <div className={`text-6xl font-bold ${getScoreColor(animatedScore)}`}>
-              {animatedScore}%
-            </div>
-            <p className="text-lg text-muted-foreground">Overall Score</p>
-            <Progress value={animatedScore} className="w-64 h-3" />
-            <p className={`text-sm font-medium ${getScoreColor(overallScore)}`}>
-              {getScoreLabel(overallScore)}
-            </p>
-            <div className="flex gap-3 mt-4">
-              <Button onClick={exportResults} variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
-              </Button>
-              <Button onClick={() => window.open('https://www.google.com/adsense', '_blank')} variant="outline" size="sm">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Apply to AdSense
-              </Button>
+    <section id="results" className="max-w-7xl mx-auto px-4 py-20 scroll-mt-20">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-6 bg-gradient-primary bg-clip-text text-transparent">
+          Your Eligibility Results
+        </h2>
+        <div className="max-w-xl mx-auto">
+          <div className="relative inline-flex flex-col items-center gap-6 p-12 bg-gradient-to-br from-primary/5 via-accent/5 to-primary-glow/5 rounded-3xl border-2 border-primary/30 animate-fade-in shadow-glow">
+            {/* Decorative elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-accent/20 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-primary/20 rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10 flex flex-col items-center gap-6">
+              <div className={`text-8xl font-black ${getScoreColor(animatedScore)} drop-shadow-lg`}>
+                {animatedScore}%
+              </div>
+              <div className="text-center">
+                <p className="text-xl font-semibold text-foreground mb-2">Overall Score</p>
+                <Progress value={animatedScore} className="w-80 h-4 mb-3" />
+                <p className={`text-base font-bold ${getScoreColor(overallScore)}`}>
+                  {getScoreLabel(overallScore)}
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-3 mt-4 justify-center">
+                <Button onClick={exportResults} variant="outline" size="lg" className="font-semibold">
+                  <Download className="w-5 h-5 mr-2" />
+                  Export Report
+                </Button>
+                <Button 
+                  onClick={() => window.open('https://www.google.com/adsense', '_blank')} 
+                  className="bg-gradient-primary font-semibold"
+                  size="lg"
+                >
+                  <ExternalLink className="w-5 h-5 mr-2" />
+                  Apply to AdSense
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -159,7 +174,7 @@ ${category.checks.map(check => `
 
       {getRecommendations()}
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
         {results.map((result, idx) => {
           const CategoryIcon = iconMap[result.icon];
           const passCount = result.checks.filter((c) => c.status === "pass").length;
@@ -168,20 +183,23 @@ ${category.checks.map(check => `
           return (
             <Card
               key={idx}
-              className="hover:shadow-lg transition-shadow duration-300 border-2"
+              className="hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 overflow-hidden group"
             >
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <CategoryIcon className="w-6 h-6 text-primary" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative z-10">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-3 bg-gradient-primary rounded-xl shadow-md group-hover:shadow-glow transition-shadow duration-300">
+                    <CategoryIcon className="w-7 h-7 text-white" />
                   </div>
-                  <CardTitle className="text-xl">{result.category}</CardTitle>
+                  <div>
+                    <CardTitle className="text-2xl font-bold">{result.category}</CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      {passCount} of {totalCount} checks passed
+                    </CardDescription>
+                  </div>
                 </div>
-                <CardDescription>
-                  {passCount} of {totalCount} checks passed
-                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 relative z-10">
                 {result.checks.map((check, checkIdx) => {
                   const config = statusConfig[check.status];
                   const StatusIcon = config.icon;
@@ -189,12 +207,12 @@ ${category.checks.map(check => `
                   return (
                     <div
                       key={checkIdx}
-                      className={`flex gap-3 p-3 rounded-lg ${config.bgColor}`}
+                      className={`flex gap-4 p-4 rounded-xl ${config.bgColor} border border-transparent hover:border-${check.status === 'pass' ? 'success' : check.status === 'fail' ? 'destructive' : 'warning'}/30 transition-all duration-200`}
                     >
-                      <StatusIcon className={`w-5 h-5 flex-shrink-0 ${config.color}`} />
+                      <StatusIcon className={`w-6 h-6 flex-shrink-0 ${config.color}`} />
                       <div className="flex-1">
-                        <p className="font-semibold text-sm mb-1">{check.name}</p>
-                        <p className="text-xs text-muted-foreground">{check.message}</p>
+                        <p className="font-bold text-base mb-1.5">{check.name}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{check.message}</p>
                       </div>
                     </div>
                   );

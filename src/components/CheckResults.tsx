@@ -3,6 +3,11 @@ import { CheckCircle2, XCircle, AlertCircle, Globe, Lock, FileText, Gauge, Downl
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
+import { ShareButtons } from "./ShareButtons";
+import { ScoreChart } from "./ScoreChart";
+import { DetailedRecommendations } from "./DetailedRecommendations";
+import { ComparisonStats } from "./ComparisonStats";
+import { Separator } from "./ui/separator";
 
 export interface CheckResult {
   category: string;
@@ -131,6 +136,17 @@ ${category.checks.map(check => `
 
   return (
     <section id="results" className="max-w-7xl mx-auto px-4 py-20 scroll-mt-20">
+      {/* Share Section */}
+      <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent mb-8">
+        <h3 className="text-lg font-semibold mb-4">Share Your Results</h3>
+        <ShareButtons websiteUrl={websiteUrl} score={overallScore} />
+      </Card>
+
+      {/* Comparison Stats */}
+      <div className="mb-8">
+        <ComparisonStats score={overallScore} />
+      </div>
+
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-6 bg-gradient-primary bg-clip-text text-transparent">
           Your Eligibility Results
@@ -174,7 +190,15 @@ ${category.checks.map(check => `
 
       {getRecommendations()}
 
-      <div className="grid md:grid-cols-2 gap-8">
+      {/* Score Breakdown and Check Results */}
+      <div className="grid lg:grid-cols-2 gap-8 mb-8">
+        {/* Score Chart */}
+        <Card className="p-6">
+          <ScoreChart results={results} />
+        </Card>
+
+        {/* Check Categories */}
+        <div className="space-y-6">
         {results.map((result, idx) => {
           const CategoryIcon = iconMap[result.icon];
           const passCount = result.checks.filter((c) => c.status === "pass").length;
@@ -221,7 +245,13 @@ ${category.checks.map(check => `
             </Card>
           );
         })}
+        </div>
       </div>
+
+      <Separator className="my-8" />
+
+      {/* Detailed Recommendations */}
+      <DetailedRecommendations results={results} />
     </section>
   );
 };

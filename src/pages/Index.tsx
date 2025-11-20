@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import CheckResults, { CheckResult } from "@/components/CheckResults";
 import InfoSection from "@/components/InfoSection";
 import RecentChecks from "@/components/RecentChecks";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -11,6 +12,8 @@ const Index = () => {
   const [results, setResults] = useState<CheckResult[] | null>(null);
   const [overallScore, setOverallScore] = useState(0);
   const [recentChecks, setRecentChecks] = useState<Array<{ url: string; score: number; date: string }>>([]);
+  const [currentCheck, setCurrentCheck] = useState("");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("recentChecks");
@@ -20,8 +23,23 @@ const Index = () => {
   }, []);
 
   const simulateCheck = async (websiteUrl: string): Promise<{ results: CheckResult[]; score: number }> => {
+    const checkCategories = [
+      { name: "Domain Criteria", delay: 500 },
+      { name: "Site Availability", delay: 1000 },
+      { name: "Site Content", delay: 1500 },
+      { name: "Site Performance", delay: 2000 }
+    ];
+
+    // Simulate progressive checking
+    checkCategories.forEach((category, index) => {
+      setTimeout(() => {
+        setCurrentCheck(category.name);
+        setProgress(((index + 1) / checkCategories.length) * 100);
+      }, category.delay);
+    });
+
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
     // Generate realistic but randomized results
     const domainAge = Math.random() > 0.3;
@@ -165,6 +183,8 @@ const Index = () => {
 
     setIsChecking(true);
     setResults(null);
+    setProgress(0);
+    setCurrentCheck("Initializing...");
     
     toast.info("Analyzing your website...");
 
@@ -202,13 +222,21 @@ const Index = () => {
     <main className="min-h-screen bg-background">
       <Hero url={url} onUrlChange={setUrl} onCheck={handleCheck} isChecking={isChecking} />
       
-      {recentChecks.length > 0 && !results && (
+      {recentChecks.length > 0 && !results && !isChecking && (
         <RecentChecks checks={recentChecks} onSelect={(selectedUrl) => setUrl(selectedUrl)} />
       )}
+
+      {isChecking && (
+        <div className="container mx-auto px-4 py-12">
+          <ProgressIndicator currentCheck={currentCheck} progress={progress} />
+        </div>
+      )}
       
-      {results && <CheckResults results={results} overallScore={overallScore} websiteUrl={url} />}
+      {results && !isChecking && (
+        <CheckResults results={results} overallScore={overallScore} websiteUrl={url} />
+      )}
       
-      <InfoSection />
+      {!isChecking && <InfoSection />}
       
       <footer className="bg-muted/50 py-8 text-center text-sm text-muted-foreground">
         <p>© 2025 AdSense Eligibility Checker. Built with advanced React technology.</p>

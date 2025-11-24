@@ -7,6 +7,10 @@ import { ShareButtons } from "./ShareButtons";
 import { ScoreChart } from "./ScoreChart";
 import { DetailedRecommendations } from "./DetailedRecommendations";
 import { ComparisonStats } from "./ComparisonStats";
+import { RevenueEstimator } from "./RevenueEstimator";
+import { ImprovementTimeline } from "./ImprovementTimeline";
+import { EligibilityCertificate } from "./EligibilityCertificate";
+import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import { Separator } from "./ui/separator";
 
 export interface CheckResult {
@@ -246,6 +250,27 @@ ${category.checks.map(check => `
           );
         })}
         </div>
+      </div>
+
+      <Separator className="my-8" />
+
+      {/* Advanced Features Grid */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        {/* Revenue Estimator */}
+        <RevenueEstimator overallScore={overallScore} />
+        
+        {/* Advanced Analytics */}
+        <AdvancedAnalytics results={results} overallScore={overallScore} />
+        
+        {/* Improvement Timeline */}
+        <ImprovementTimeline results={results} overallScore={overallScore} />
+        
+        {/* Eligibility Certificate */}
+        <EligibilityCertificate 
+          websiteUrl={websiteUrl} 
+          overallScore={overallScore} 
+          date={new Date().toISOString()} 
+        />
       </div>
 
       <Separator className="my-8" />

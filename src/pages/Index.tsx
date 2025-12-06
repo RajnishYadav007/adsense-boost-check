@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
+import Header from "@/components/Header";
 import CheckResults, { CheckResult } from "@/components/CheckResults";
 import InfoSection from "@/components/InfoSection";
 import RecentChecks from "@/components/RecentChecks";
@@ -220,6 +221,7 @@ const Index = () => {
 
   return (
     <main className="min-h-screen bg-background">
+      <Header />
       <Hero url={url} onUrlChange={setUrl} onCheck={handleCheck} isChecking={isChecking} />
       
       {recentChecks.length > 0 && !results && !isChecking && (

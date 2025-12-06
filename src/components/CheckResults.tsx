@@ -11,6 +11,7 @@ import { RevenueEstimator } from "./RevenueEstimator";
 import { ImprovementTimeline } from "./ImprovementTimeline";
 import { EligibilityCertificate } from "./EligibilityCertificate";
 import { AdvancedAnalytics } from "./AdvancedAnalytics";
+import AIContentAnalyzer from "./AIContentAnalyzer";
 import { Separator } from "./ui/separator";
 
 export interface CheckResult {
@@ -251,6 +252,11 @@ ${category.checks.map(check => `
         })}
         </div>
       </div>
+
+      <Separator className="my-8" />
+
+      {/* AI Content Analyzer */}
+      <AIContentAnalyzer websiteUrl={websiteUrl} />
 
       <Separator className="my-8" />
 

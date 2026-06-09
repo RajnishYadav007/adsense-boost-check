@@ -1,0 +1,11 @@
+# AdSense Eligibility Checker
+
+> Free tool that analyzes any website against Google AdSense approval requirements and gives a detailed score with recommendations.
+
+The site lets visitors enter a URL and instantly receive a breakdown of domain criteria, site availability, content quality, and performance — plus AI-powered content analysis, revenue estimates, and an improvement timeline.
+
+## Pages
+
+- [Home](/): Run an AdSense eligibility check on any website and view the full score breakdown.
+- [Resources](/resources): Guide to AdSense approval — tips, requirements checklist, and FAQs.
+- [Dashboard](/dashboard): Recent-check history and analytics for sites you've analyzed.

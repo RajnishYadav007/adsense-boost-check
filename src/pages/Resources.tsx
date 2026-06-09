@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -66,7 +67,26 @@ const Resources = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>AdSense Approval Guide - Tips, Requirements & FAQs</title>
+        <meta name="description" content="Complete guide to getting approved for Google AdSense: pro tips, essential requirements, and answers to common questions about the approval process." />
+        <link rel="canonical" href="https://adsense-boost-check.lovable.app/resources" />
+        <meta property="og:title" content="AdSense Approval Guide - Tips, Requirements & FAQs" />
+        <meta property="og:description" content="Pro tips, requirements checklist, and FAQs for getting approved for Google AdSense." />
+        <meta property="og:url" content="https://adsense-boost-check.lovable.app/resources" />
+        <meta property="og:type" content="article" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        })}</script>
+      </Helmet>
       <Header />
+      
       
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">

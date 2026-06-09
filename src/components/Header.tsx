@@ -45,13 +45,15 @@ const Header = () => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               return (
-                <Link key={item.path} to={item.path}>
+                <Link key={item.path} to={item.path} aria-label={item.label}>
                   <Button
                     variant="ghost"
                     size="icon"
+                    aria-label={item.label}
                     className={isActive ? "text-primary" : ""}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                    <span className="sr-only">{item.label}</span>
                   </Button>
                 </Link>
               );

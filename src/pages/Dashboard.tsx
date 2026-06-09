@@ -51,6 +51,16 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Dashboard - Your AdSense Check History</title>
+        <meta name="description" content="View your AdSense eligibility check history, track score trends across sites, and revisit past website analyses." />
+        <link rel="canonical" href="https://adsense-boost-check.lovable.app/dashboard" />
+        <meta property="og:title" content="Dashboard - Your AdSense Check History" />
+        <meta property="og:description" content="Track your AdSense eligibility checks and score trends over time." />
+        <meta property="og:url" content="https://adsense-boost-check.lovable.app/dashboard" />
+        <meta property="og:type" content="website" />
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <Header />
 
       <main className="container mx-auto px-4 py-12">

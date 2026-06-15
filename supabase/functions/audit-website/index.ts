@@ -158,7 +158,25 @@ ${promptBody}`,
     const data = await r.json();
     const raw: string = data.choices?.[0]?.message?.content ?? "";
     const cleaned = raw.replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(cleaned);
+    let parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) {
+      // Aggregate if model returned per-sample objects
+      const avg = (k: string) => Math.round(parsed.reduce((a: number, x: any) => a + (Number(x[k]) || 0), 0) / parsed.length);
+      const riskOrder = ["none", "low", "medium", "high"];
+      const worstRisk = parsed.reduce(
+        (acc: string, x: any) => (riskOrder.indexOf(x.policyRisk) > riskOrder.indexOf(acc) ? x.policyRisk : acc),
+        "none",
+      );
+      parsed = {
+        originality: avg("originality"),
+        depth: avg("depth"),
+        policyRisk: worstRisk,
+        niche: parsed[0]?.niche ?? "",
+        notes: parsed[0]?.notes ?? "",
+      };
+    }
+    return parsed;
+
   } catch (e) {
     console.log("AI judge failed", (e as Error).message);
     return null;

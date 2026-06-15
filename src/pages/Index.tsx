@@ -131,7 +131,7 @@ const Index = () => {
 
       {results && !isChecking && (
         <div id="results">
-          <CheckResults results={results} overallScore={overallScore} websiteUrl={url} />
+          <CheckResults results={results} overallScore={overallScore} websiteUrl={url} audit={audit} />
         </div>
       )}
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import NewHero from "@/components/NewHero";
 import { SiteLayout } from "@/components/layout/SiteLayout";
-import CheckResults, { CheckResult } from "@/components/CheckResults";
+import CheckResults, { CheckResult, AuditMeta } from "@/components/CheckResults";
 import RecentChecks from "@/components/RecentChecks";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -14,7 +14,9 @@ import { BlogPreview } from "@/components/home/BlogPreview";
 import { FAQ } from "@/components/home/FAQ";
 import { Testimonials } from "@/components/home/Testimonials";
 import { CTABanner } from "@/components/home/CTABanner";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 
 const Index = () => {
   const [url, setUrl] = useState("");

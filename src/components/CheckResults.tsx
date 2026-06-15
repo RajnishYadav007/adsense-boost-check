@@ -66,7 +66,7 @@ const statusConfig = {
   },
 };
 
-const CheckResults = ({ results, overallScore, websiteUrl }: CheckResultsProps) => {
+const CheckResults = ({ results, overallScore, websiteUrl, audit }: CheckResultsProps) => {
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {

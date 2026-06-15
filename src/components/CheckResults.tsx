@@ -24,11 +24,22 @@ export interface CheckResult {
   }[];
 }
 
+export interface AuditMeta {
+  verdict: "approved" | "likely" | "needs_work" | "not_eligible";
+  verdictLabel: string;
+  verdictReason: string;
+  approvalProbability: number;
+  adsense: { active: boolean; publisherId: string | null; adsTxt: boolean };
+  blockers: string[];
+}
+
 interface CheckResultsProps {
   results: CheckResult[];
   overallScore: number;
   websiteUrl: string;
+  audit?: AuditMeta;
 }
+
 
 const iconMap = {
   globe: Globe,

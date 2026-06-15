@@ -136,21 +136,22 @@ async function aiContentJudgement(samples: { url: string; text: string }[]): Pro
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You audit websites for Google AdSense Program Policies. Respond with valid JSON only." },
+          { role: "system", content: "You audit websites for Google AdSense Program Policies. Respond with a SINGLE JSON object only — never an array, never markdown." },
           {
             role: "user",
-            content: `Analyse these page samples and return:
+            content: `Analyse ALL of these page samples together (they come from ONE site) and return ONE aggregated JSON object:
 {
- "originality": 0-100 (does it feel original vs scraped/auto-generated/thin),
- "depth": 0-100 (how substantive is the content),
- "policyRisk": "none"|"low"|"medium"|"high" (AdSense policy violations: adult, violence, illegal, copyrighted, shocking, hate, dangerous),
- "niche": "<short niche>",
- "notes": "<1-sentence summary>"
+ "originality": <integer 0-100, overall feel of original vs scraped/auto-generated/thin>,
+ "depth": <integer 0-100, overall substantive depth>,
+ "policyRisk": "none" | "low" | "medium" | "high",
+ "niche": "<short overall niche>",
+ "notes": "<1-sentence overall summary>"
 }
 Samples:
 ${promptBody}`,
           },
         ],
+
       }),
     });
     if (!r.ok) { console.log("AI gateway", r.status); return null; }

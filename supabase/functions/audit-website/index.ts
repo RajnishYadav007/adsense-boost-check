@@ -328,8 +328,8 @@ Deno.serve(async (req) => {
       console.error(e);
       return json({ error: (e as Error).message }, 500);
     }
-  });
-}
+});
+
 
 function ck(name: string, status: Check["status"], message: string, weight: number): Check {
   return { name, status, message, weight };

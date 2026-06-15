@@ -24,11 +24,22 @@ export interface CheckResult {
   }[];
 }
 
+export interface AuditMeta {
+  verdict: "approved" | "likely" | "needs_work" | "not_eligible";
+  verdictLabel: string;
+  verdictReason: string;
+  approvalProbability: number;
+  adsense: { active: boolean; publisherId: string | null; adsTxt: boolean };
+  blockers: string[];
+}
+
 interface CheckResultsProps {
   results: CheckResult[];
   overallScore: number;
   websiteUrl: string;
+  audit?: AuditMeta;
 }
+
 
 const iconMap = {
   globe: Globe,
@@ -55,7 +66,7 @@ const statusConfig = {
   },
 };
 
-const CheckResults = ({ results, overallScore, websiteUrl }: CheckResultsProps) => {
+const CheckResults = ({ results, overallScore, websiteUrl, audit }: CheckResultsProps) => {
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {
@@ -139,8 +150,46 @@ ${category.checks.map(check => `
     return "Needs Work - Address critical issues";
   };
 
+  const verdictTone =
+    audit?.verdict === "approved" ? "from-success/20 to-success/5 border-success/40 text-success"
+    : audit?.verdict === "likely" ? "from-primary/15 to-primary/5 border-primary/40 text-primary"
+    : audit?.verdict === "needs_work" ? "from-warning/20 to-warning/5 border-warning/40 text-warning"
+    : "from-destructive/20 to-destructive/5 border-destructive/40 text-destructive";
+
   return (
     <section id="results" className="max-w-7xl mx-auto px-4 py-20 scroll-mt-20">
+      {audit && (
+        <Card className={`p-6 mb-6 border-2 bg-gradient-to-br ${verdictTone}`}>
+          <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider opacity-70 mb-1">AdSense verdict</p>
+              <h3 className="text-2xl font-bold">{audit.verdictLabel}</h3>
+              <p className="text-sm text-foreground/80 mt-1 max-w-2xl">{audit.verdictReason}</p>
+              {audit.blockers.length > 0 && (
+                <ul className="mt-3 text-sm text-foreground/80 list-disc pl-5">
+                  {audit.blockers.map((b) => <li key={b}>{b}</li>)}
+                </ul>
+              )}
+            </div>
+            <div className="text-center shrink-0">
+              <div className="text-4xl font-black">{audit.approvalProbability}%</div>
+              <div className="text-xs opacity-70 uppercase tracking-wider">Approval probability</div>
+              <div className="mt-3 text-xs">
+                {audit.adsense.active ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success/15 text-success">
+                    ✓ AdSense detected{audit.adsense.publisherId ? ` (${audit.adsense.publisherId})` : ""}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-muted-foreground">
+                    ✗ No AdSense code on site
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Share Section */}
       <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent mb-8">
         <h3 className="text-lg font-semibold mb-4">Share Your Results</h3>

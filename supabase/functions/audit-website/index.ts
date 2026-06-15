@@ -71,10 +71,8 @@ const PROHIBITED_PATTERNS = [
   /\b(hack(ing)?\s+tutorial|ddos\s+tool)\b/i,
 ];
 
-serve();
+Deno.serve(async (req) => {
 
-function serve() {
-  Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
     try {
       const body = await req.json().catch(() => ({}));

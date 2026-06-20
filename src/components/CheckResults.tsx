@@ -13,6 +13,7 @@ import { EligibilityCertificate } from "./EligibilityCertificate";
 import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import AIContentAnalyzer from "./AIContentAnalyzer";
 import { Separator } from "./ui/separator";
+import { generatePdfReport } from "@/lib/pdfReport";
 
 export interface CheckResult {
   category: string;

@@ -523,8 +523,10 @@ Deno.serve(async (req) => {
         linksFound: allLinks.length,
         looksSpa,
       },
+      fetchedUrls: [finalUrl, ...samples.map((s) => s.url)],
       blockers,
       results: all.map((x) => x.cat),
+
     });
   } catch (e) {
     console.error(e);

@@ -13,6 +13,7 @@ import { EligibilityCertificate } from "./EligibilityCertificate";
 import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import AIContentAnalyzer from "./AIContentAnalyzer";
 import { Separator } from "./ui/separator";
+import { generatePdfReport } from "@/lib/pdfReport";
 
 export interface CheckResult {
   category: string;
@@ -31,6 +32,7 @@ export interface AuditMeta {
   approvalProbability: number;
   adsense: { active: boolean; publisherId: string | null; adsTxt: boolean };
   blockers: string[];
+  fetchedUrls?: string[];
 }
 
 interface CheckResultsProps {
@@ -89,29 +91,9 @@ const CheckResults = ({ results, overallScore, websiteUrl, audit }: CheckResults
   }, [overallScore]);
 
   const exportResults = () => {
-    const reportContent = `
-AdSense Eligibility Report
-Website: ${websiteUrl}
-Date: ${new Date().toLocaleDateString()}
-Overall Score: ${overallScore}%
-
-${results.map(category => `
-${category.category}
-${category.checks.map(check => `
-  ✓ ${check.name}: ${check.status.toUpperCase()}
-  ${check.message}
-`).join('\n')}
-`).join('\n')}
-    `.trim();
-
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `adsense-report-${new Date().getTime()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    generatePdfReport({ websiteUrl, overallScore, results, audit });
   };
+
 
   const getRecommendations = () => {
     const failed = results.flatMap(r => r.checks.filter(c => c.status === 'fail'));

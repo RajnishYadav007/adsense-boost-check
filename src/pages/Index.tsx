@@ -86,6 +86,7 @@ const Index = () => {
         approvalProbability: data.approvalProbability,
         adsense: data.adsense,
         blockers: data.blockers,
+        fetchedUrls: (data as any).fetchedUrls,
       });
       const newCheck = { url, score: data.score, date: new Date().toISOString() };
       const updated = [newCheck, ...recentChecks.filter((c) => c.url !== url)].slice(0, 5);

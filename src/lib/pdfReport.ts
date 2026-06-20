@@ -21,9 +21,24 @@ function fixFor(blocker: string): string {
 
 type RGB = [number, number, number];
 
-const COLORS = {
-  brand: [79, 70, 229] as RGB,
-  brandDark: [55, 48, 163] as RGB,
+export interface PdfTheme {
+  brand?: RGB;
+  brandDark?: RGB;
+  companyName?: string;
+  productName?: string;
+  logoDataUrl?: string; // PNG/JPG data URL
+  footerNote?: string;
+}
+
+const DEFAULT_THEME: Required<Omit<PdfTheme, "logoDataUrl">> = {
+  brand: [79, 70, 229],
+  brandDark: [55, 48, 163],
+  companyName: "AdSense Approval Checker",
+  productName: "Eligibility Audit Report",
+  footerNote: "Confidential — generated report",
+};
+
+const BASE_COLORS = {
   ink: [17, 24, 39] as RGB,
   body: [55, 65, 81] as RGB,
   muted: [107, 114, 128] as RGB,
@@ -33,6 +48,7 @@ const COLORS = {
   warn: [202, 138, 4] as RGB,
   danger: [220, 38, 38] as RGB,
   info: [37, 99, 235] as RGB,
+  white: [255, 255, 255] as RGB,
 };
 
 export function generatePdfReport(opts: {
@@ -40,25 +56,93 @@ export function generatePdfReport(opts: {
   overallScore: number;
   results: CheckResult[];
   audit?: AuditMeta & { fetchedUrls?: string[] };
+  theme?: PdfTheme;
+  pageSize?: "a4" | "letter";
 }) {
   const { websiteUrl, overallScore, results, audit } = opts;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const theme = { ...DEFAULT_THEME, ...(opts.theme ?? {}) };
+  const pageSize = opts.pageSize ?? "a4";
+
+  const doc = new jsPDF({ unit: "pt", format: pageSize });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
-  const M = 48;
-  const CONTENT_W = W - M * 2;
-  let y = 0;
+
+  // Print-safe margins (~0.6in left/right, 0.75in top/bottom)
+  const M = { left: 48, right: 48, top: 56, bottom: 64 };
+  const CONTENT_W = W - M.left - M.right;
+  const CONTENT_BOTTOM = H - M.bottom;
+
+  let y = M.top;
+  let isCoverPage = true;
 
   const setColor = (c: RGB) => doc.setTextColor(c[0], c[1], c[2]);
   const setFill = (c: RGB) => doc.setFillColor(c[0], c[1], c[2]);
   const setDraw = (c: RGB) => doc.setDrawColor(c[0], c[1], c[2]);
 
-  const ensureSpace = (needed: number) => {
-    if (y + needed > H - 70) {
-      drawFooter();
-      doc.addPage();
-      y = M;
+  const drawPageHeader = () => {
+    if (isCoverPage) return;
+    // Slim brand bar
+    setFill(theme.brand);
+    doc.rect(0, 0, W, 4, "F");
+
+    // Logo or initial
+    const headerY = 24;
+    if (theme.logoDataUrl) {
+      try {
+        doc.addImage(theme.logoDataUrl, "PNG", M.left, headerY - 10, 22, 22);
+      } catch {
+        // ignore bad image
+      }
+    } else {
+      setFill(theme.brand);
+      doc.roundedRect(M.left, headerY - 10, 22, 22, 4, 4, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      setColor(BASE_COLORS.white);
+      doc.text(theme.companyName.charAt(0).toUpperCase(), M.left + 11, headerY + 5, { align: "center" });
     }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    setColor(BASE_COLORS.ink);
+    doc.text(theme.companyName, M.left + 30, headerY + 2);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    setColor(BASE_COLORS.muted);
+    doc.text(theme.productName, M.left + 30, headerY + 14);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    setColor(BASE_COLORS.muted);
+    doc.text(websiteUrl, W - M.right, headerY + 2, { align: "right" });
+    doc.text(new Date().toLocaleDateString(), W - M.right, headerY + 14, { align: "right" });
+
+    setDraw(BASE_COLORS.rule);
+    doc.setLineWidth(0.5);
+    doc.line(M.left, 48, W - M.right, 48);
+  };
+
+  const drawPageFooter = (pageNum: number, totalPages: number) => {
+    const fy = H - 32;
+    setDraw(BASE_COLORS.rule);
+    doc.setLineWidth(0.5);
+    doc.line(M.left, fy, W - M.right, fy);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    setColor(BASE_COLORS.muted);
+    doc.text(theme.companyName, M.left, fy + 14);
+    doc.text(theme.footerNote, W / 2, fy + 14, { align: "center" });
+    doc.text(`Page ${pageNum} of ${totalPages}`, W - M.right, fy + 14, { align: "right" });
+  };
+
+  const newPage = () => {
+    doc.addPage();
+    isCoverPage = false;
+    drawPageHeader();
+    y = 68; // below header
+  };
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > CONTENT_BOTTOM) newPage();
   };
 
   const text = (
@@ -66,331 +150,336 @@ export function generatePdfReport(opts: {
     x: number,
     size = 10,
     weight: "normal" | "bold" = "normal",
-    color: RGB = COLORS.body,
+    color: RGB = BASE_COLORS.body,
     maxW?: number
   ) => {
     doc.setFont("helvetica", weight);
     doc.setFontSize(size);
     setColor(color);
     const lines = doc.splitTextToSize(txt, maxW ?? CONTENT_W);
+    const lh = size * 1.4;
     for (const ln of lines) {
-      ensureSpace(size * 1.35);
+      ensureSpace(lh);
       doc.text(ln, x, y);
-      y += size * 1.35;
+      y += lh;
     }
   };
 
   const sectionTitle = (label: string) => {
-    ensureSpace(34);
-    y += 6;
+    ensureSpace(40);
+    y += 8;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    setColor(COLORS.brand);
-    doc.text(label.toUpperCase(), M, y, { charSpace: 1.2 });
-    y += 6;
-    setDraw(COLORS.brand);
-    doc.setLineWidth(1);
-    doc.line(M, y, M + 36, y);
-    setDraw(COLORS.rule);
+    setColor(theme.brand);
+    doc.text(label.toUpperCase(), M.left, y, { charSpace: 1.2 });
+    y += 8;
+    setDraw(theme.brand);
+    doc.setLineWidth(1.2);
+    doc.line(M.left, y, M.left + 36, y);
+    setDraw(BASE_COLORS.rule);
     doc.setLineWidth(0.5);
-    doc.line(M + 40, y, W - M, y);
-    y += 14;
+    doc.line(M.left + 40, y, W - M.right, y);
+    y += 16;
   };
 
-  // ---------- Page 1 Header ----------
-  setFill(COLORS.brand);
-  doc.rect(0, 0, W, 110, "F");
-  setFill(COLORS.brandDark);
-  doc.rect(0, 100, W, 10, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  setColor([255, 255, 255]);
-  doc.text("ADSENSE APPROVAL CHECKER", M, 42, { charSpace: 1.5 });
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("Eligibility Audit Report", M, 72);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(new Date().toLocaleString(), W - M, 42, { align: "right" });
-  doc.text("Confidential", W - M, 72, { align: "right" });
-
-  y = 138;
-
-  // ---------- Site URL ----------
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  setColor(COLORS.muted);
-  doc.text("AUDITED WEBSITE", M, y, { charSpace: 1.2 });
-  y += 16;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  setColor(COLORS.ink);
-  doc.text(websiteUrl, M, y);
-  y += 22;
-
-  // ---------- Verdict / Score Card ----------
   const verdictColor: RGB =
-    audit?.verdict === "approved" ? COLORS.success
-    : audit?.verdict === "likely" ? COLORS.info
-    : audit?.verdict === "needs_work" ? COLORS.warn
-    : audit?.verdict === "not_eligible" ? COLORS.danger
-    : COLORS.brand;
+    audit?.verdict === "approved" ? BASE_COLORS.success
+    : audit?.verdict === "likely" ? BASE_COLORS.info
+    : audit?.verdict === "needs_work" ? BASE_COLORS.warn
+    : audit?.verdict === "not_eligible" ? BASE_COLORS.danger
+    : theme.brand;
 
-  const cardH = 130;
-  setFill(COLORS.bgSoft);
-  setDraw(COLORS.rule);
-  doc.setLineWidth(0.75);
-  doc.roundedRect(M, y, CONTENT_W, cardH, 10, 10, "FD");
+  // ========================================================
+  // COVER PAGE
+  // ========================================================
+  setFill(theme.brand);
+  doc.rect(0, 0, W, H * 0.42, "F");
+  setFill(theme.brandDark);
+  doc.rect(0, H * 0.42 - 8, W, 8, "F");
 
-  // Left accent bar
-  setFill(verdictColor);
-  doc.roundedRect(M, y, 6, cardH, 3, 3, "F");
-  doc.rect(M + 3, y, 4, cardH, "F");
-
-  // Score column
-  const colScoreX = M + 26;
-  const colScoreW = 130;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  setColor(COLORS.muted);
-  doc.text("OVERALL SCORE", colScoreX, y + 22, { charSpace: 1 });
-
+  // Logo / brand badge
+  const coverHeaderY = M.top + 8;
+  if (theme.logoDataUrl) {
+    try {
+      doc.addImage(theme.logoDataUrl, "PNG", M.left, coverHeaderY, 40, 40);
+    } catch {
+      // ignore
+    }
+  } else {
+    setFill(BASE_COLORS.white);
+    doc.roundedRect(M.left, coverHeaderY, 40, 40, 8, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    setColor(theme.brand);
+    doc.text(theme.companyName.charAt(0).toUpperCase(), M.left + 20, coverHeaderY + 27, { align: "center" });
+  }
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(46);
-  setColor(verdictColor);
-  doc.text(`${overallScore}`, colScoreX, y + 70);
-  doc.setFontSize(18);
-  const scoreW = doc.getTextWidth(`${overallScore}`);
-  doc.text("/100", colScoreX + scoreW + 4, y + 70);
-
-  // Mini progress bar
-  const barX = colScoreX;
-  const barY = y + 86;
-  const barW = colScoreW - 20;
-  setFill([229, 231, 235]);
-  doc.roundedRect(barX, barY, barW, 6, 3, 3, "F");
-  setFill(verdictColor);
-  const fillW = Math.max(4, (barW * Math.min(100, Math.max(0, overallScore))) / 100);
-  doc.roundedRect(barX, barY, fillW, 6, 3, 3, "F");
-
-  // Divider
-  setDraw(COLORS.rule);
-  doc.setLineWidth(0.5);
-  doc.line(M + 26 + colScoreW, y + 18, M + 26 + colScoreW, y + cardH - 18);
-
-  // Verdict column
-  const colVerdictX = M + 26 + colScoreW + 18;
-  const colVerdictW = CONTENT_W - (colScoreW + 26 + 18) - 140;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  setColor(COLORS.muted);
-  doc.text("VERDICT", colVerdictX, y + 22, { charSpace: 1 });
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  setColor(verdictColor);
-  doc.text(audit?.verdictLabel ?? "Pending", colVerdictX, y + 44);
-
+  doc.setFontSize(12);
+  setColor(BASE_COLORS.white);
+  doc.text(theme.companyName.toUpperCase(), M.left + 52, coverHeaderY + 18, { charSpace: 1.5 });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
-  setColor(COLORS.body);
-  const reason = doc.splitTextToSize(audit?.verdictReason ?? "Run an audit to see the verdict.", colVerdictW);
-  doc.text(reason.slice(0, 4), colVerdictX, y + 62, { lineHeightFactor: 1.4 });
+  doc.text(theme.productName, M.left + 52, coverHeaderY + 33);
 
-  // Right column - approval probability
-  const rightX = W - M - 130;
-  setDraw(COLORS.rule);
-  doc.line(rightX - 14, y + 18, rightX - 14, y + cardH - 18);
+  // Title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(34);
+  setColor(BASE_COLORS.white);
+  doc.text("AdSense Eligibility", M.left, H * 0.42 - 70);
+  doc.text("Audit Report", M.left, H * 0.42 - 34);
 
+  // Cover card
+  const cardX = M.left;
+  const cardY = H * 0.42 + 28;
+  const cardW = CONTENT_W;
+  const cardH = 230;
+  setFill(BASE_COLORS.white);
+  setDraw(BASE_COLORS.rule);
+  doc.setLineWidth(0.75);
+  doc.roundedRect(cardX, cardY, cardW, cardH, 12, 12, "FD");
+  // accent stripe
+  setFill(verdictColor);
+  doc.roundedRect(cardX, cardY, cardW, 6, 12, 12, "F");
+  doc.rect(cardX, cardY + 4, cardW, 4, "F");
+
+  let cy = cardY + 32;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  setColor(COLORS.muted);
-  doc.text("APPROVAL PROBABILITY", rightX, y + 22, { charSpace: 1 });
-
+  doc.setFontSize(8.5);
+  setColor(BASE_COLORS.muted);
+  doc.text("TESTED WEBSITE", cardX + 24, cy, { charSpace: 1.1 });
+  cy += 16;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(32);
+  doc.setFontSize(15);
+  setColor(BASE_COLORS.ink);
+  const urlLines = doc.splitTextToSize(websiteUrl, cardW - 48);
+  doc.text(urlLines.slice(0, 2), cardX + 24, cy);
+  cy += urlLines.length > 1 ? 36 : 22;
+
+  // Two columns: Verdict + Score
+  const colW = (cardW - 48 - 24) / 2;
+  // Verdict
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  setColor(BASE_COLORS.muted);
+  doc.text("VERDICT", cardX + 24, cy, { charSpace: 1.1 });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
   setColor(verdictColor);
-  doc.text(`${audit?.approvalProbability ?? "—"}%`, rightX, y + 60);
+  doc.text(audit?.verdictLabel ?? "Pending", cardX + 24, cy + 22);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  setColor(BASE_COLORS.body);
+  const reason = doc.splitTextToSize(audit?.verdictReason ?? "Run an audit to view a verdict.", colW);
+  doc.text(reason.slice(0, 3), cardX + 24, cy + 40, { lineHeightFactor: 1.4 });
 
-  // AdSense pill
-  const pillY = y + 86;
-  const pillTxt = audit?.adsense.active
-    ? "AdSense detected"
-    : "No AdSense code";
+  // Score
+  const scoreColX = cardX + 24 + colW + 24;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  setColor(BASE_COLORS.muted);
+  doc.text("OVERALL SCORE", scoreColX, cy, { charSpace: 1.1 });
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  const pillTxtW = doc.getTextWidth(pillTxt);
-  const pillW = pillTxtW + 18;
-  const pillBg: RGB = audit?.adsense.active ? COLORS.success : COLORS.muted;
-  setFill(pillBg);
-  doc.roundedRect(rightX, pillY, pillW, 16, 8, 8, "F");
-  setColor([255, 255, 255]);
-  doc.text(pillTxt, rightX + pillW / 2, pillY + 11, { align: "center" });
+  doc.setFontSize(40);
+  setColor(verdictColor);
+  doc.text(`${overallScore}`, scoreColX, cy + 36);
+  const sw = doc.getTextWidth(`${overallScore}`);
+  doc.setFontSize(14);
+  setColor(BASE_COLORS.muted);
+  doc.text("/100", scoreColX + sw + 6, cy + 36);
+  // progress bar
+  const pbY = cy + 52;
+  setFill([229, 231, 235]);
+  doc.roundedRect(scoreColX, pbY, colW, 6, 3, 3, "F");
+  setFill(verdictColor);
+  const fillW = Math.max(4, (colW * Math.min(100, Math.max(0, overallScore))) / 100);
+  doc.roundedRect(scoreColX, pbY, fillW, 6, 3, 3, "F");
+  // approval %
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  setColor(BASE_COLORS.muted);
+  doc.text(`Approval probability: ${audit?.approvalProbability ?? "—"}%`, scoreColX, pbY + 20);
 
-  if (audit?.adsense.publisherId) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    setColor(COLORS.muted);
-    doc.text(audit.adsense.publisherId, rightX, pillY + 28);
-  }
+  // meta strip bottom of card
+  setDraw(BASE_COLORS.rule);
+  doc.setLineWidth(0.5);
+  doc.line(cardX + 24, cardY + cardH - 44, cardX + cardW - 24, cardY + cardH - 44);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  setColor(BASE_COLORS.muted);
+  doc.text("GENERATED", cardX + 24, cardY + cardH - 26, { charSpace: 1.1 });
+  doc.text("ADSENSE STATUS", cardX + 24 + colW + 24, cardY + cardH - 26, { charSpace: 1.1 });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  setColor(BASE_COLORS.ink);
+  doc.text(new Date().toLocaleString(), cardX + 24, cardY + cardH - 12);
+  const adsTxt = audit?.adsense.active ? "Detected on site" : "Not detected";
+  setColor(audit?.adsense.active ? BASE_COLORS.success : BASE_COLORS.muted);
+  doc.text(adsTxt, cardX + 24 + colW + 24, cardY + cardH - 12);
 
-  y += cardH + 20;
+  // Cover footer
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  setColor(BASE_COLORS.muted);
+  doc.text(theme.footerNote, M.left, H - 40);
+  doc.text(theme.companyName, W - M.right, H - 40, { align: "right" });
 
-  // ---------- Blockers ----------
+  // ========================================================
+  // CONTENT PAGES
+  // ========================================================
+  newPage();
+
+  // Executive Summary
+  sectionTitle("Executive Summary");
+  text(
+    audit?.verdictReason ??
+      "This report summarizes the AdSense eligibility checks performed against your website, including content quality, policy pages, technical readiness and crawl accessibility.",
+    M.left,
+    10.5,
+    "normal",
+    BASE_COLORS.body
+  );
+  y += 4;
+
+  // Blockers
   if (audit && audit.blockers.length > 0) {
     sectionTitle("Critical Blockers & Recommended Fixes");
     audit.blockers.forEach((b, i) => {
-      ensureSpace(60);
+      const blockerLines = doc.splitTextToSize(b, CONTENT_W - 60);
+      const fixLines = doc.splitTextToSize(fixFor(b), CONTENT_W - 60);
+      const boxH = 24 + blockerLines.length * 13 + 18 + fixLines.length * 12 + 14;
+      ensureSpace(boxH + 10);
       const boxY = y;
       setFill([254, 242, 242]);
-      setDraw(COLORS.danger);
-      doc.setLineWidth(0.4);
-      const fixLines = doc.splitTextToSize(fixFor(b), CONTENT_W - 56);
-      const blockerLines = doc.splitTextToSize(b, CONTENT_W - 56);
-      const boxH = 22 + blockerLines.length * 13 + fixLines.length * 12 + 12;
-      doc.roundedRect(M, boxY, CONTENT_W, boxH, 6, 6, "FD");
+      setDraw(BASE_COLORS.danger);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(M.left, boxY, CONTENT_W, boxH, 8, 8, "FD");
 
-      // Number circle
-      setFill(COLORS.danger);
-      doc.circle(M + 20, boxY + 22, 11, "F");
+      setFill(BASE_COLORS.danger);
+      doc.circle(M.left + 22, boxY + 24, 12, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      setColor([255, 255, 255]);
-      doc.text(`${i + 1}`, M + 20, boxY + 26, { align: "center" });
+      setColor(BASE_COLORS.white);
+      doc.text(`${i + 1}`, M.left + 22, boxY + 28, { align: "center" });
 
-      // Blocker
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10.5);
-      setColor(COLORS.danger);
-      let ty = boxY + 18;
+      setColor(BASE_COLORS.danger);
+      let ty = boxY + 20;
       blockerLines.forEach((ln: string) => {
-        doc.text(ln, M + 40, ty);
+        doc.text(ln, M.left + 44, ty);
         ty += 13;
       });
 
-      // Fix
+      ty += 6;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      setColor(COLORS.muted);
-      doc.text("RECOMMENDED FIX", M + 40, ty + 4, { charSpace: 1 });
+      setColor(BASE_COLORS.muted);
+      doc.text("RECOMMENDED FIX", M.left + 44, ty, { charSpace: 1 });
+      ty += 14;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9.5);
-      setColor(COLORS.body);
-      ty += 16;
+      setColor(BASE_COLORS.body);
       fixLines.forEach((ln: string) => {
-        doc.text(ln, M + 40, ty);
+        doc.text(ln, M.left + 44, ty);
         ty += 12;
       });
 
-      y = boxY + boxH + 10;
+      y = boxY + boxH + 12;
     });
   }
 
-  // ---------- Pages Crawled ----------
+  // Pages crawled
   if (audit?.fetchedUrls && audit.fetchedUrls.length > 0) {
     sectionTitle("Pages Crawled During Audit");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     audit.fetchedUrls.forEach((u) => {
-      ensureSpace(14);
-      setColor(COLORS.muted);
-      doc.text("•", M + 4, y);
-      setColor(COLORS.info);
-      doc.text(u, M + 16, y);
-      y += 14;
+      const lines = doc.splitTextToSize(u, CONTENT_W - 20);
+      ensureSpace(lines.length * 13 + 2);
+      setColor(BASE_COLORS.muted);
+      doc.text("•", M.left + 4, y);
+      setColor(BASE_COLORS.info);
+      lines.forEach((ln: string, idx: number) => {
+        doc.text(ln, M.left + 16, y);
+        y += 13;
+        if (idx < lines.length - 1) ensureSpace(13);
+      });
     });
-    y += 4;
+    y += 6;
   }
 
-  // ---------- Detailed Results ----------
+  // Detailed results
   sectionTitle("Detailed Check Results");
-
   results.forEach((cat) => {
-    ensureSpace(40);
     const pass = cat.checks.filter((c) => c.status === "pass").length;
     const total = cat.checks.length;
+    ensureSpace(46);
 
-    // Category header bar
     setFill([243, 244, 246]);
-    doc.roundedRect(M, y, CONTENT_W, 26, 4, 4, "F");
+    doc.roundedRect(M.left, y, CONTENT_W, 28, 6, 6, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    setColor(COLORS.ink);
-    doc.text(cat.category, M + 12, y + 17);
+    setColor(BASE_COLORS.ink);
+    doc.text(cat.category, M.left + 14, y + 18);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    setColor(COLORS.muted);
-    doc.text(`${pass} / ${total} passed`, W - M - 12, y + 17, { align: "right" });
-    y += 36;
+    setColor(BASE_COLORS.muted);
+    doc.text(`${pass} / ${total} passed`, W - M.right - 14, y + 18, { align: "right" });
+    y += 38;
 
     cat.checks.forEach((c) => {
       const color: RGB =
-        c.status === "pass" ? COLORS.success : c.status === "fail" ? COLORS.danger : COLORS.warn;
+        c.status === "pass" ? BASE_COLORS.success : c.status === "fail" ? BASE_COLORS.danger : BASE_COLORS.warn;
       const label = c.status === "pass" ? "PASS" : c.status === "fail" ? "FAIL" : "WARN";
-
-      const msgLines = doc.splitTextToSize(c.message, CONTENT_W - 70);
-      const rowH = 16 + msgLines.length * 11 + 6;
+      const msgLines = doc.splitTextToSize(c.message, CONTENT_W - 80);
+      const rowH = 18 + msgLines.length * 12 + 10;
       ensureSpace(rowH);
 
-      // Status badge
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
-      const badgeW = 36;
+      const badgeW = 40;
       setFill(color);
-      doc.roundedRect(M + 4, y - 9, badgeW, 13, 3, 3, "F");
-      setColor([255, 255, 255]);
-      doc.text(label, M + 4 + badgeW / 2, y, { align: "center" });
+      doc.roundedRect(M.left + 4, y - 10, badgeW, 14, 4, 4, "F");
+      setColor(BASE_COLORS.white);
+      doc.text(label, M.left + 4 + badgeW / 2, y, { align: "center" });
 
-      // Name
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
-      setColor(COLORS.ink);
-      doc.text(c.name, M + 4 + badgeW + 10, y);
+      setColor(BASE_COLORS.ink);
+      doc.text(c.name, M.left + 4 + badgeW + 12, y, { maxWidth: CONTENT_W - badgeW - 16 });
 
-      // Message
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      setColor(COLORS.body);
-      let my = y + 12;
+      setColor(BASE_COLORS.body);
+      let my = y + 14;
       msgLines.forEach((ln: string) => {
-        doc.text(ln, M + 4 + badgeW + 10, my);
-        my += 11;
+        doc.text(ln, M.left + 4 + badgeW + 12, my);
+        my += 12;
       });
 
-      y = my + 6;
-      // separator
+      y = my + 8;
       setDraw([243, 244, 246]);
       doc.setLineWidth(0.4);
-      doc.line(M + 4, y - 3, W - M - 4, y - 3);
+      doc.line(M.left + 4, y - 4, W - M.right - 4, y - 4);
     });
-    y += 8;
+    y += 10;
   });
 
-  // ---------- Footers ----------
-  function drawFooter() {
-    const pY = H - 36;
-    setDraw(COLORS.rule);
-    doc.setLineWidth(0.5);
-    doc.line(M, pY, W - M, pY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    setColor(COLORS.muted);
-    doc.text("AdSense Approval Checker", M, pY + 14);
-    doc.text(websiteUrl, W / 2, pY + 14, { align: "center" });
-  }
-
-  const pages = doc.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
+  // ========================================================
+  // Stamp footers/page numbers on every page
+  // ========================================================
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    drawFooter();
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    setColor(COLORS.muted);
-    doc.text(`Page ${i} of ${pages}`, W - M, H - 22, { align: "right" });
+    if (i === 1) {
+      // Cover already has its own footer; add discreet page indicator
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      setColor(BASE_COLORS.muted);
+      doc.text(`Page ${i} of ${totalPages}`, W / 2, H - 24, { align: "center" });
+    } else {
+      drawPageFooter(i, totalPages);
+    }
   }
 
   const safe = websiteUrl.replace(/^https?:\/\//, "").replace(/[^a-z0-9]/gi, "_").slice(0, 40);

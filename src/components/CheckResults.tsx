@@ -94,7 +94,6 @@ const CheckResults = ({ results, overallScore, websiteUrl, audit }: CheckResults
     generatePdfReport({ websiteUrl, overallScore, results, audit });
   };
 
-  };
 
   const getRecommendations = () => {
     const failed = results.flatMap(r => r.checks.filter(c => c.status === 'fail'));

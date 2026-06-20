@@ -31,6 +31,7 @@ export interface AuditMeta {
   approvalProbability: number;
   adsense: { active: boolean; publisherId: string | null; adsTxt: boolean };
   blockers: string[];
+  fetchedUrls?: string[];
 }
 
 interface CheckResultsProps {

@@ -91,28 +91,9 @@ const CheckResults = ({ results, overallScore, websiteUrl, audit }: CheckResults
   }, [overallScore]);
 
   const exportResults = () => {
-    const reportContent = `
-AdSense Eligibility Report
-Website: ${websiteUrl}
-Date: ${new Date().toLocaleDateString()}
-Overall Score: ${overallScore}%
+    generatePdfReport({ websiteUrl, overallScore, results, audit });
+  };
 
-${results.map(category => `
-${category.category}
-${category.checks.map(check => `
-  ✓ ${check.name}: ${check.status.toUpperCase()}
-  ${check.message}
-`).join('\n')}
-`).join('\n')}
-    `.trim();
-
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `adsense-report-${new Date().getTime()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const getRecommendations = () => {

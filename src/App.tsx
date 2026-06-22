@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Resources from "./pages/Resources";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +20,13 @@ import Blog from "./pages/Blog";
 import Guides from "./pages/Guides";
 import EditorialPolicy from "./pages/EditorialPolicy";
 import ReviewProcess from "./pages/ReviewProcess";
+import AdsenseApprovalCheckerTool from "./pages/tools/AdsenseApprovalCheckerTool";
+import AdsenseApprovalCalculator from "./pages/tools/AdsenseApprovalCalculator";
+import AdsensePolicyChecker from "./pages/tools/AdsensePolicyChecker";
+import AdsenseRejectionAnalyzer from "./pages/tools/AdsenseRejectionAnalyzer";
+import WebsiteQualityScoreChecker from "./pages/tools/WebsiteQualityScoreChecker";
+import ContentQualityChecker from "./pages/tools/ContentQualityChecker";
+import SeoAuditChecker from "./pages/tools/SeoAuditChecker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,7 +40,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/tools" element={<Tools />} />
+          <Route path="/tools/adsense-approval-checker" element={<AdsenseApprovalCheckerTool />} />
+          <Route path="/tools/adsense-approval-calculator" element={<AdsenseApprovalCalculator />} />
+          <Route path="/tools/adsense-policy-checker" element={<AdsensePolicyChecker />} />
           <Route path="/tools/adsense-revenue-calculator" element={<RevenueCalculator />} />
+          <Route path="/tools/adsense-rejection-analyzer" element={<AdsenseRejectionAnalyzer />} />
+          <Route path="/tools/website-quality-score-checker" element={<WebsiteQualityScoreChecker />} />
+          <Route path="/tools/content-quality-checker" element={<ContentQualityChecker />} />
+          <Route path="/tools/seo-audit-checker" element={<SeoAuditChecker />} />
           <Route path="/tools/policy-page-generator" element={<PolicyGenerator />} />
           <Route path="/tools/seo-checklist" element={<SEOChecklist />} />
           <Route path="/blog" element={<Blog />} />

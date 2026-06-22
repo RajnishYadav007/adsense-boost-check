@@ -35,6 +35,18 @@ const Index = () => {
   useEffect(() => {
     const saved = localStorage.getItem("recentChecks");
     if (saved) setRecentChecks(JSON.parse(saved));
+    const params = new URLSearchParams(window.location.search);
+    const qUrl = params.get("url");
+    const auto = params.get("autorun");
+    if (qUrl) {
+      setUrl(qUrl);
+      if (auto === "1") {
+        setTimeout(() => {
+          const btn = document.querySelector<HTMLButtonElement>('#analyzer button[type="submit"]');
+          btn?.click();
+        }, 300);
+      }
+    }
   }, []);
 
   const runAudit = async (websiteUrl: string) => {

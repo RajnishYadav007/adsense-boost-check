@@ -18,6 +18,8 @@ import Disclaimer from "./pages/Disclaimer";
 import SitemapPage from "./pages/SitemapPage";
 import Blog from "./pages/Blog";
 import Guides from "./pages/Guides";
+import EditorialPolicy from "./pages/EditorialPolicy";
+import ReviewProcess from "./pages/ReviewProcess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
+          <Route path="/editorial-policy" element={<EditorialPolicy />} />
+          <Route path="/review-process" element={<ReviewProcess />} />
           <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

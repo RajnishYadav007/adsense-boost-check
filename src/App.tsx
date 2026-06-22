@@ -29,6 +29,9 @@ import ContentQualityChecker from "./pages/tools/ContentQualityChecker";
 import SeoAuditChecker from "./pages/tools/SeoAuditChecker";
 import NotFound from "./pages/NotFound";
 import GuideDetail from "./pages/GuideDetail";
+import Auth from "./pages/Auth";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -38,8 +41,10 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthProvider>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/tools/adsense-approval-checker" element={<AdsenseApprovalCheckerTool />} />
           <Route path="/tools/adsense-approval-calculator" element={<AdsenseApprovalCalculator />} />
@@ -63,10 +68,11 @@ const App = () => (
           <Route path="/editorial-policy" element={<EditorialPolicy />} />
           <Route path="/review-process" element={<ReviewProcess />} />
           <Route path="/sitemap" element={<SitemapPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

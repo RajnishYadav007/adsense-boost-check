@@ -1,131 +1,91 @@
-# AdsenseApprovalChecker.net — Authority Site Transformation Plan
+# Full SaaS Transformation Plan — AdSenseApprovalChecker.net
 
-Scope is huge (100+ pages, programmatic SEO, new tools, schema, EEAT, CWV). Shipping in **4 phases** so each is reviewable and the build stays stable. This plan covers all phases; I'll execute Phase 1 immediately after approval, then check in before each next phase.
-
----
-
-## Phase 1 — Homepage rebuild, schema, EEAT foundation, CWV
-
-**Homepage (`/`) — full SaaS redesign, 2500+ words**
-New sections in this order:
-1. Hero — H1 "Check If Your Website Is Ready For Google AdSense Approval", subheading per spec, analyze form, trust badges, sample score widget, live demo report preview screenshot
-2. Trust bar — counters (sites analyzed, approvals predicted, avg score)
-3. What Is An AdSense Approval Checker
-4. How AdSense Approval Works
-5. Why Google Rejects Websites
-6. Common AdSense Mistakes
-7. AdSense Approval Checklist (interactive 20-point)
-8. How Our Tool Works (4-step + screenshots)
-9. AdSense Requirements Explained
-10. Sample Report preview card
-11. Case Studies (3 cards)
-12. Success Stories / Testimonials
-13. FAQ (12 Q&A, accordion)
-14. Sticky bottom CTA + Exit-intent CTA
-
-**Schema markup (JSON-LD via Helmet)**
-- Site-wide: Organization, WebSite (with SearchAction)
-- Homepage: SoftwareApplication, FAQPage, BreadcrumbList
-- Tool pages: SoftwareApplication + HowTo
-- Articles: Article + BreadcrumbList + Author
-- Helper: `src/lib/schema.ts` builders
-
-**EEAT pages (new/upgraded)**
-- `/about` — full company/about author with photo, credentials
-- `/editorial-policy` (new)
-- `/review-process` (new)
-- `/contact` (keep, expand with company address block)
-- `/privacy-policy`, `/terms-of-service`, `/disclaimer` (keep, expand)
-
-**Conversion components**
-- `StickyCTA.tsx` — appears after scrolling past hero
-- `ExitIntentModal.tsx` — fires on mouseleave to top
-- `TrustCounters.tsx`, `RecentAnalyses.tsx` (live-feel ticker)
-
-**Core Web Vitals**
-- Lazy-load route components via `React.lazy` + `Suspense`
-- Image optimization: `loading="lazy"`, explicit width/height, AVIF/WebP where assets are generated
-- Code-split heavy libs (jsPDF, recharts)
-- Preconnect to Supabase + fonts in `index.html`
-- Reserve space for dynamic blocks to keep CLS < 0.1
-
-**SEO meta upgrades**
-- Homepage title: "AdSense Approval Checker — Free Website Eligibility Audit Tool"
-- Meta description rewritten for CTR
-- All canonicals self-reference
-- `public/sitemap.xml` updated with all Phase 1–4 routes
-- `public/robots.txt` allows all + Sitemap directive
-- `public/llms.txt` updated
+This is a large, multi-phase build. I'll break it into 4 shippable phases so you can review and approve work as it lands, rather than dumping ~40+ files in one go.
 
 ---
 
-## Phase 2 — Tool suite expansion (8 dedicated tool pages)
+## Phase 1 — Foundation: Auth + Roles + Schema (ship first)
 
-Each is its own route with unique H1, target keyword, 800+ word body, FAQ, schema.
+**Database migration (single SQL migration):**
+- `profiles` (user_id, full_name, avatar_url, bio)
+- `app_role` enum already exists (`admin`, `moderator`, `user`) — extend to add `super_admin`, `editor`, `author`
+- `blog_categories` (name, slug, description, parent_id)
+- `blog_tags` (name, slug)
+- `post_tags` (post_id, tag_id) join table
+- Extend existing `blog_posts` with: author_id, category_id, status enum (draft/scheduled/published), featured_image, meta_title, meta_description, focus_keyword, canonical_url, og_title, og_description, twitter_card, schema_json, robots_index, views
+- `audit_reports` (user_id nullable, domain, overall_score, seo_score, content_score, technical_score, trust_score, issues jsonb, recommendations jsonb)
+- `media_library` (uploader_id, url, alt_text, title, caption, mime_type, size_bytes, folder)
+- `site_settings` (key, value jsonb)
+- `activity_logs` (user_id, action, entity_type, entity_id, metadata)
+- Update trigger `auto-create profile + default 'user' role` on signup
+- RLS + GRANTs on every table (public read for published posts/categories/tags; admin/editor/author scoped writes via `has_role`)
+- Storage bucket: `media` (public read, admin/editor write)
 
-| Route | Keyword |
-|---|---|
-| `/tools/adsense-approval-checker` (canonical of homepage tool) | adsense approval checker |
-| `/tools/adsense-approval-calculator` | adsense approval score |
-| `/tools/adsense-policy-checker` | adsense policy checker |
-| `/tools/adsense-revenue-calculator` (existing, upgrade) | adsense revenue calculator |
-| `/tools/adsense-rejection-analyzer` | adsense rejection checker |
-| `/tools/website-quality-score-checker` | website quality checker |
-| `/tools/content-quality-checker` | content quality |
-| `/tools/seo-audit-checker` | seo audit tool |
-
-`/tools` hub upgraded to grid all 8 with descriptions.
-
----
-
-## Phase 3 — Content hub, clusters, programmatic SEO
-
-**Content hub categories** (new index pages):
-- `/guides/` (exists, upgrade)
-- `/checklists/` (new)
-- `/case-studies/` (new)
-- `/adsense-errors/` (new)
-- `/adsense-policy/` (new)
-
-**Article cluster (15 articles)** — DB-backed (`blog_posts` already exists). I'll seed 15 full-length articles covering the cluster topics in the spec (How Many Posts For AdSense, Blogger, WordPress, AI Content, News, Movie, Checklist, Time, Rejection Reasons, Policy Violations, Score Guide, Examples, Fast Approval, New Domain, Niche Sites).
-
-**Programmatic SEO landing pages (7 routes)**:
-- `/check-wordpress-site-for-adsense`
-- `/check-blog-for-adsense`
-- `/check-news-site-for-adsense`
-- `/check-health-site-for-adsense`
-- `/check-finance-site-for-adsense`
-- `/check-ai-content-for-adsense`
-- `/check-ecommerce-site-for-adsense`
-
-Driven by a single `<NicheCheckerPage>` template + niche config map (unique H1, intro, niche-specific requirements section, common-rejection list, FAQ, schema). Inlined to the checker engine with niche context passed to the audit function.
-
-**Internal linking**: shared `<RelatedContent>` component on every page (related tool + related guide + related FAQ + homepage).
+**Auth:**
+- Email/password + Google sign-in enabled
+- `/auth` page (login + signup tabs, password validation)
+- `useAuth` hook + `<ProtectedRoute roles={[...]}>` wrapper
+- Password reset flow (`/reset-password`)
 
 ---
 
-## Phase 4 — Blog backlog plan + final SEO polish
+## Phase 2 — Admin Dashboard Shell + Blog CMS
 
-**Blog content plan**: ship `content/blog-plan.md` with 100 article briefs (keyword, intent, SEO title, meta description, slug, target internal links). Not 100 published posts — that's months of writing — but the structured plan the user can hand to a writer / fill with AI.
-
-**Final polish**
-- Breadcrumbs on every non-home route with BreadcrumbList schema
-- Sitemap generator script that pulls slugs from DB at build time
-- 404 page upgraded with related-content suggestions
-- Final Lighthouse pass + fixes
+- `/admin` route guarded by `admin`/`super_admin`/`editor` roles
+- Sidebar layout (Ahrefs-style): Dashboard, Posts, Categories, Tags, Media, Audits, SEO, Newsletter, Messages, Users, Settings, Logs
+- **Dashboard home:** stat cards (posts, subscribers, audits, messages) + recent activity feed
+- **Blog CMS:**
+  - Posts list (search, filter by status/category, bulk actions)
+  - Post editor: title → auto-slug, markdown editor (already have react-markdown), featured image picker (from media library), category, tags, excerpt, status, schedule
+  - SEO tab inside editor: meta title/desc, focus keyword, canonical, OG, Twitter, robots, schema JSON preview
+  - Auto reading-time calc on save
+- **Categories & Tags:** CRUD pages
+- **Media Library:** grid view, upload (to Supabase Storage `media` bucket), alt/title/caption edit, delete
 
 ---
 
-## Technical notes
-- Stack stays React 18 + Vite + RR6 + shadcn + Tailwind + Helmet + Supabase. No new heavy deps.
-- All new colors via semantic tokens already defined in `src/index.css`.
-- Schema builders typed and reusable.
-- Niche checker pages reuse the existing `audit-website` edge function — no backend rewrite.
-- DB: existing `blog_posts` and `guides` tables fit; I'll add a `category` filter use rather than new tables. New `checklists` and `case_studies` are simple enough to ship as static MDX-style React content (no migration needed) unless you want them DB-backed.
+## Phase 3 — SEO Center + Audit History + Newsletter + Users
 
-## What I need from you
-1. **Approve the plan** so I can start Phase 1.
-2. **Confirm**: case studies + checklists as static React pages (faster) or DB-backed (editable later)? Default = static.
-3. **Author info for EEAT** (optional now, can use placeholder "Editorial Team" if not provided): real name, 1-paragraph bio, photo URL.
+- **SEO Center:** auto-sitemap edge function reading `blog_posts` + static routes; RSS feed edge function; schema generator helpers (Article/FAQ/HowTo/Breadcrumb already in `src/lib/schema.ts` — extend)
+- **Audit Reports admin:** table of all audits with filters, click to view full JSON report
+- **Audit history (frontend):** logged-in users see `/dashboard/my-audits` with their saved reports; new audits write to `audit_reports`
+- **Newsletter admin:** subscriber table, CSV export, simple growth chart
+- **Contact Messages admin:** inbox view of `contact_submissions`
+- **User Management:** list users + roles, promote/demote (super_admin only)
+- **Activity Logs:** simple table view
 
-After approval I execute Phase 1 end-to-end in one batch, report what shipped, then ask before starting Phase 2.
+---
+
+## Phase 4 — Frontend Blog Polish + Performance + Security
+
+- Public blog: category pages `/blog/category/:slug`, tag pages `/blog/tag/:slug`, author pages `/blog/author/:slug`, search `/blog/search?q=`
+- Single post: related posts (by category + tags), author box, breadcrumbs, share buttons (exists), view counter (RPC increment)
+- Sitemap generator script (`scripts/generate-sitemap.ts`) pulling from DB at build time
+- `robots.txt` already exists — add `Sitemap:` line
+- Performance: lazy-load admin routes via `React.lazy`, image lazy-loading already standard
+- Security: zod validation on all forms (contact, newsletter, post editor), rate limiting on edge functions, RLS double-checked
+
+---
+
+## Technical Details
+
+**Stack additions:**
+- `@uiw/react-md-editor` for rich markdown editing (or keep textarea + preview)
+- `recharts` (already in shadcn) for admin charts
+- `date-fns` for scheduling
+- Supabase Storage for media
+
+**Roles enforcement:** all writes gated by `has_role(auth.uid(), 'admin'|'editor'|'author')` SECURITY DEFINER function (already exists, will extend enum).
+
+**No breaking changes** to current public pages — phases 1–3 add infrastructure; phase 4 polishes the existing blog/guides.
+
+---
+
+## What I need from you before starting
+
+1. **Confirm role list:** `super_admin`, `admin`, `editor`, `author`, `user` — OK? (Current enum has admin/moderator/user; I'll migrate moderator→editor.)
+2. **First admin user:** after Phase 1 ships, sign up via `/auth` and tell me the email — I'll grant you `super_admin` via a one-line insert.
+3. **Google sign-in:** enable by default? (Yes/No)
+4. **Approve Phase 1 to begin** — I'll start with the migration, then auth UI, then move to Phase 2 in the next round.
+
+Reply "go" (with answers to 1–3) and I'll ship Phase 1.

@@ -28,6 +28,7 @@ import WebsiteQualityScoreChecker from "./pages/tools/WebsiteQualityScoreChecker
 import ContentQualityChecker from "./pages/tools/ContentQualityChecker";
 import SeoAuditChecker from "./pages/tools/SeoAuditChecker";
 import NotFound from "./pages/NotFound";
+import GuideDetail from "./pages/GuideDetail";
 
 const queryClient = new QueryClient();
 

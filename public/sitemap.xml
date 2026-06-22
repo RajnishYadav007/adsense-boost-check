@@ -2,8 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://adsense-boost-check.lovable.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://adsense-boost-check.lovable.app/tools</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/adsense-approval-checker</loc><changefreq>monthly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/adsense-approval-calculator</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/adsense-policy-checker</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://adsense-boost-check.lovable.app/tools/adsense-revenue-calculator</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://adsense-boost-check.lovable.app/tools/policy-page-generator</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/adsense-rejection-analyzer</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/website-quality-score-checker</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/content-quality-checker</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/seo-audit-checker</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://adsense-boost-check.lovable.app/tools/policy-page-generator</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://adsense-boost-check.lovable.app/tools/seo-checklist</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://adsense-boost-check.lovable.app/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://adsense-boost-check.lovable.app/guides</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>

@@ -13,6 +13,13 @@ import { cn } from "@/lib/utils";
 
 const toolLinks = [
   { to: "/tools", label: "All Tools" },
+  { to: "/tools/adsense-approval-checker", label: "AdSense Approval Checker" },
+  { to: "/tools/adsense-approval-calculator", label: "Approval Score Calculator" },
+  { to: "/tools/adsense-policy-checker", label: "Policy Checker" },
+  { to: "/tools/adsense-rejection-analyzer", label: "Rejection Analyzer" },
+  { to: "/tools/website-quality-score-checker", label: "Website Quality Score" },
+  { to: "/tools/content-quality-checker", label: "Content Quality Checker" },
+  { to: "/tools/seo-audit-checker", label: "SEO Audit Checker" },
   { to: "/tools/adsense-revenue-calculator", label: "Revenue Calculator" },
   { to: "/tools/policy-page-generator", label: "Policy Page Generator" },
   { to: "/tools/seo-checklist", label: "SEO Checklist" },

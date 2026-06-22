@@ -53,6 +53,7 @@ const App = () => (
           <Route path="/tools/seo-checklist" element={<SEOChecklist />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/guides" element={<Guides />} />
+          <Route path="/guides/:slug" element={<GuideDetail />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

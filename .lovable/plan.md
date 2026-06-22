@@ -1,98 +1,131 @@
-## Goal
+# AdsenseApprovalChecker.net — Authority Site Transformation Plan
 
-Transform the current AdSense Eligibility Checker into the full "AdSense Approval Checker" product. Keep the existing checker, AI analyzer, dashboard, and shadcn components; add the missing pages, a backend-powered blog/guides CMS, a real-data hybrid checker, dark/light theming, and DB-backed forms.
-
-Because the spec is large, work ships in 3 phases. This plan covers **Phase 1**. Phases 2–3 are scoped at the end and shipped in follow-up turns.
+Scope is huge (100+ pages, programmatic SEO, new tools, schema, EEAT, CWV). Shipping in **4 phases** so each is reviewable and the build stays stable. This plan covers all phases; I'll execute Phase 1 immediately after approval, then check in before each next phase.
 
 ---
 
-## Phase 1 — Rebrand, theme, homepage, core new pages, backend
+## Phase 1 — Homepage rebuild, schema, EEAT foundation, CWV
 
-### 1. Rebrand + design system
-- Update name to **AdSense✓Checker** everywhere (Header, footer, `index.html`, meta tags, `llms.txt`, `sitemap.xml`, JSON-LD).
-- Replace current purple/violet palette with the new indigo (`#6366f1`) + cyan (`#06b6d4`) system as HSL semantic tokens in `src/index.css` and `tailwind.config.ts`. Add dark mode (default) and light mode token sets.
-- Add Inter + Sora Google Fonts. Headings = Sora, body = Inter.
-- Add `next-themes`-style theme provider (using `class` strategy on `<html>`) with localStorage persistence and a toggle in the Header.
+**Homepage (`/`) — full SaaS redesign, 2500+ words**
+New sections in this order:
+1. Hero — H1 "Check If Your Website Is Ready For Google AdSense Approval", subheading per spec, analyze form, trust badges, sample score widget, live demo report preview screenshot
+2. Trust bar — counters (sites analyzed, approvals predicted, avg score)
+3. What Is An AdSense Approval Checker
+4. How AdSense Approval Works
+5. Why Google Rejects Websites
+6. Common AdSense Mistakes
+7. AdSense Approval Checklist (interactive 20-point)
+8. How Our Tool Works (4-step + screenshots)
+9. AdSense Requirements Explained
+10. Sample Report preview card
+11. Case Studies (3 cards)
+12. Success Stories / Testimonials
+13. FAQ (12 Q&A, accordion)
+14. Sticky bottom CTA + Exit-intent CTA
 
-### 2. Layout shell
-- New `src/components/layout/Navbar.tsx` (sticky, backdrop-blur, Tools/Guides dropdowns, mobile drawer, theme toggle, "Analyze Site" CTA).
-- New `src/components/layout/Footer.tsx` (4 columns, newsletter signup, social icons, legal links).
-- `src/components/layout/SiteLayout.tsx` wraps every route.
-- Retire current `Header.tsx` once Navbar is wired in.
+**Schema markup (JSON-LD via Helmet)**
+- Site-wide: Organization, WebSite (with SearchAction)
+- Homepage: SoftwareApplication, FAQPage, BreadcrumbList
+- Tool pages: SoftwareApplication + HowTo
+- Articles: Article + BreadcrumbList + Author
+- Helper: `src/lib/schema.ts` builders
 
-### 3. Homepage rebuild (`/`)
-Replace `Hero` + `InfoSection` with new sections in this order:
-Hero (with trust stats + URL input) → How It Works (4 steps) → 47-Point Audit Categories (6 cards) → Live Result Demo → Why Choose Us → Tools Hub Preview → Blog Preview (pulls 3 latest posts from DB) → FAQ (accordion, 8 items) → Testimonials → CTA Banner → Footer.
-Reuse existing `CheckResults` and `AIContentAnalyzer` for the live results section (already integrated).
+**EEAT pages (new/upgraded)**
+- `/about` — full company/about author with photo, credentials
+- `/editorial-policy` (new)
+- `/review-process` (new)
+- `/contact` (keep, expand with company address block)
+- `/privacy-policy`, `/terms-of-service`, `/disclaimer` (keep, expand)
 
-### 4. New routes (Phase 1 set)
-| Path | Purpose |
-| --- | --- |
-| `/` | Homepage (above) |
-| `/tools` | Tools hub grid |
-| `/tools/adsense-revenue-calculator` | Revenue calculator with sliders + bar chart |
-| `/tools/policy-page-generator` | Tabbed Privacy / Terms / Disclaimer / Cookie / About / Contact generator |
-| `/tools/seo-checklist` | Interactive 30-point checklist (localStorage) |
-| `/about` | About page |
-| `/contact` | Contact form (writes to `contact_submissions`) |
-| `/privacy-policy`, `/terms-of-service`, `/disclaimer` | Static legal pages |
-| `/sitemap` | HTML sitemap |
+**Conversion components**
+- `StickyCTA.tsx` — appears after scrolling past hero
+- `ExitIntentModal.tsx` — fires on mouseleave to top
+- `TrustCounters.tsx`, `RecentAnalyses.tsx` (live-feel ticker)
 
-Existing `/resources` redirects to `/guides`; `/dashboard` stays.
+**Core Web Vitals**
+- Lazy-load route components via `React.lazy` + `Suspense`
+- Image optimization: `loading="lazy"`, explicit width/height, AVIF/WebP where assets are generated
+- Code-split heavy libs (jsPDF, recharts)
+- Preconnect to Supabase + fonts in `index.html`
+- Reserve space for dynamic blocks to keep CLS < 0.1
 
-### 5. Backend (Lovable Cloud)
-Single migration creates four tables, all RLS-enabled:
-
-- `blog_posts` — slug, title, excerpt, body (markdown), cover_image_url, category, published, published_at.
-- `guides` — same shape as blog_posts, separate table for `/guides`.
-- `contact_submissions` — name, email, subject, message.
-- `newsletter_subscribers` — email (unique).
-
-RLS:
-- `blog_posts` / `guides`: public `SELECT` where `published = true`; admin role required for write.
-- `contact_submissions` / `newsletter_subscribers`: public `INSERT` only; admin role required to read.
-- Role system: `app_role` enum + `user_roles` table + `has_role()` security-definer function (per project conventions).
-
-Seed 4 starter blog posts and 3 starter guides via the insert tool after migration approval.
-
-### 6. Hybrid checker upgrade
-New edge function `analyze-site`:
-1. Fetches the target URL server-side.
-2. Real checks: HTTPS, response status, `<title>`, meta description, H1 count, canonical, `robots.txt`, `sitemap.xml`, word count, HSTS / X-Frame-Options / CSP headers, viewport meta, favicon, internal link count.
-3. Simulated (seeded by URL hash, so stable): domain age, Core Web Vitals, mobile score, CDN detection, niche check.
-4. Returns the 6-category 47-point breakdown plus issues + action plan.
-
-The existing `AIContentAnalyzer` continues to provide AI-powered content analysis on top of the report.
-
-### 7. Forms
-- Contact form → insert into `contact_submissions` (public INSERT policy).
-- Footer newsletter signup → insert into `newsletter_subscribers` with `ON CONFLICT (email) DO NOTHING`.
-- Validate with `zod`; show toast on success/error.
-
-### 8. SEO upkeep
-- Per-route `<Helmet>` on every new page (unique title, description, canonical, og:*).
-- Update `public/sitemap.xml` with all Phase 1 routes; add blog/guide slugs (still static list — Phase 2 switches to generator script that reads DB).
-- Update `public/robots.txt`, `public/llms.txt`.
-- Add `FAQPage` JSON-LD on the homepage FAQ section.
-- AdSense ad-slot placeholders (`<!-- AdSense Ad Slot -->`) above-the-fold, in-content, and footer on key pages.
+**SEO meta upgrades**
+- Homepage title: "AdSense Approval Checker — Free Website Eligibility Audit Tool"
+- Meta description rewritten for CTR
+- All canonicals self-reference
+- `public/sitemap.xml` updated with all Phase 1–4 routes
+- `public/robots.txt` allows all + Sitemap directive
+- `public/llms.txt` updated
 
 ---
 
-## Phase 2 (next turn)
-- `/blog`, `/blog/:slug`, `/guides`, `/guides/:slug` pages reading from DB.
-- Markdown rendering (`react-markdown` + `remark-gfm`) with Tailwind prose.
-- Sitemap generator script that pulls slugs from the DB at build time.
-- Admin page (auth-gated) to create/edit posts and guides.
+## Phase 2 — Tool suite expansion (8 dedicated tool pages)
 
-## Phase 3 (later)
-- Real PageSpeed / Core Web Vitals via Google PSI API (requires user key).
-- PDF report download.
-- Email delivery for forms via Resend (requires API key).
+Each is its own route with unique H1, target keyword, 800+ word body, FAQ, schema.
+
+| Route | Keyword |
+|---|---|
+| `/tools/adsense-approval-checker` (canonical of homepage tool) | adsense approval checker |
+| `/tools/adsense-approval-calculator` | adsense approval score |
+| `/tools/adsense-policy-checker` | adsense policy checker |
+| `/tools/adsense-revenue-calculator` (existing, upgrade) | adsense revenue calculator |
+| `/tools/adsense-rejection-analyzer` | adsense rejection checker |
+| `/tools/website-quality-score-checker` | website quality checker |
+| `/tools/content-quality-checker` | content quality |
+| `/tools/seo-audit-checker` | seo audit tool |
+
+`/tools` hub upgraded to grid all 8 with descriptions.
+
+---
+
+## Phase 3 — Content hub, clusters, programmatic SEO
+
+**Content hub categories** (new index pages):
+- `/guides/` (exists, upgrade)
+- `/checklists/` (new)
+- `/case-studies/` (new)
+- `/adsense-errors/` (new)
+- `/adsense-policy/` (new)
+
+**Article cluster (15 articles)** — DB-backed (`blog_posts` already exists). I'll seed 15 full-length articles covering the cluster topics in the spec (How Many Posts For AdSense, Blogger, WordPress, AI Content, News, Movie, Checklist, Time, Rejection Reasons, Policy Violations, Score Guide, Examples, Fast Approval, New Domain, Niche Sites).
+
+**Programmatic SEO landing pages (7 routes)**:
+- `/check-wordpress-site-for-adsense`
+- `/check-blog-for-adsense`
+- `/check-news-site-for-adsense`
+- `/check-health-site-for-adsense`
+- `/check-finance-site-for-adsense`
+- `/check-ai-content-for-adsense`
+- `/check-ecommerce-site-for-adsense`
+
+Driven by a single `<NicheCheckerPage>` template + niche config map (unique H1, intro, niche-specific requirements section, common-rejection list, FAQ, schema). Inlined to the checker engine with niche context passed to the audit function.
+
+**Internal linking**: shared `<RelatedContent>` component on every page (related tool + related guide + related FAQ + homepage).
+
+---
+
+## Phase 4 — Blog backlog plan + final SEO polish
+
+**Blog content plan**: ship `content/blog-plan.md` with 100 article briefs (keyword, intent, SEO title, meta description, slug, target internal links). Not 100 published posts — that's months of writing — but the structured plan the user can hand to a writer / fill with AI.
+
+**Final polish**
+- Breadcrumbs on every non-home route with BreadcrumbList schema
+- Sitemap generator script that pulls slugs from DB at build time
+- 404 page upgraded with related-content suggestions
+- Final Lighthouse pass + fixes
 
 ---
 
 ## Technical notes
-- Stack stays React 18 + Vite + RR6 + TanStack Query + shadcn. Add: `framer-motion`, `next-themes`, `recharts` (for revenue chart). `react-helmet-async` already pinned to v2 (React 18 compatible).
-- All colors via semantic Tailwind tokens — no hex in components.
-- Edge function uses `LOVABLE_API_KEY` already present; no new secrets needed for Phase 1.
-- Phase 1 alone is a large change (≈25 new files). After approval I'll execute it in one batch and report what shipped.
+- Stack stays React 18 + Vite + RR6 + shadcn + Tailwind + Helmet + Supabase. No new heavy deps.
+- All new colors via semantic tokens already defined in `src/index.css`.
+- Schema builders typed and reusable.
+- Niche checker pages reuse the existing `audit-website` edge function — no backend rewrite.
+- DB: existing `blog_posts` and `guides` tables fit; I'll add a `category` filter use rather than new tables. New `checklists` and `case_studies` are simple enough to ship as static MDX-style React content (no migration needed) unless you want them DB-backed.
+
+## What I need from you
+1. **Approve the plan** so I can start Phase 1.
+2. **Confirm**: case studies + checklists as static React pages (faster) or DB-backed (editable later)? Default = static.
+3. **Author info for EEAT** (optional now, can use placeholder "Editorial Team" if not provided): real name, 1-paragraph bio, photo URL.
+
+After approval I execute Phase 1 end-to-end in one batch, report what shipped, then ask before starting Phase 2.

@@ -37,13 +37,13 @@ export default function NewHero({ url, onUrlChange, onCheck, isChecking }: HeroP
           </Badge>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] mb-5">
-            Is Your Website <br className="hidden md:block" />
-            <span className="text-gradient-hero">AdSense Ready?</span>
+            Check If Your Website Is{" "}
+            <span className="text-gradient-hero">Ready For Google AdSense</span> Approval
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Run a free 47-point AI audit on any domain. We check content quality, SEO architecture,
-            policy compliance, security headers &amp; more — in under 20 seconds.
+            Run a complete AdSense eligibility audit and discover issues that may prevent approval.
+            Analyze content quality, SEO structure, trust signals, compliance pages, and technical performance — free, in under 20 seconds.
           </p>
 
           <form

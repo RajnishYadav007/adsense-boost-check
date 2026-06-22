@@ -83,11 +83,14 @@ export function Footer() {
             <FooterLink to="/sitemap">HTML Sitemap</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Legal">
+          <FooterColumn title="Company">
+            <FooterLink to="/about">About</FooterLink>
+            <FooterLink to="/editorial-policy">Editorial Policy</FooterLink>
+            <FooterLink to="/review-process">Review Process</FooterLink>
+            <FooterLink to="/contact">Contact</FooterLink>
             <FooterLink to="/privacy-policy">Privacy Policy</FooterLink>
             <FooterLink to="/terms-of-service">Terms of Service</FooterLink>
             <FooterLink to="/disclaimer">Disclaimer</FooterLink>
-            <FooterLink to="/contact">Contact Us</FooterLink>
           </FooterColumn>
         </div>
 

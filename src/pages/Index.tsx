@@ -14,7 +14,11 @@ import { BlogPreview } from "@/components/home/BlogPreview";
 import { FAQ } from "@/components/home/FAQ";
 import { Testimonials } from "@/components/home/Testimonials";
 import { CTABanner } from "@/components/home/CTABanner";
+import { DeepContent } from "@/components/home/DeepContent";
+import { StickyCTA } from "@/components/StickyCTA";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { supabase } from "@/integrations/supabase/client";
+import { softwareApplicationSchema, websiteSchema } from "@/lib/schema";
 import { toast } from "sonner";
 
 
@@ -109,13 +113,15 @@ const Index = () => {
   return (
     <SiteLayout>
       <Helmet>
-        <title>AdSense Approval Checker — Free 47-Point Audit for Your Website</title>
-        <meta name="description" content="Find out if your website is ready for Google AdSense. Run a free 47-point AI audit on any domain — content, SEO, security, legal & performance. Results in 20 seconds." />
+        <title>AdSense Approval Checker — Free Website Eligibility Audit Tool</title>
+        <meta name="description" content="Check if your website is ready for Google AdSense approval. Free 47-point eligibility audit covering content, policies, SEO, security & performance — results in 20 seconds." />
         <link rel="canonical" href="https://adsense-boost-check.lovable.app/" />
-        <meta property="og:title" content="AdSense Approval Checker — Free 47-Point Audit" />
-        <meta property="og:description" content="Run a free 47-point AI audit on any domain. Find out if your site is AdSense-ready in under 20 seconds." />
+        <meta property="og:title" content="AdSense Approval Checker — Free Website Eligibility Audit" />
+        <meta property="og:description" content="Check if your website is ready for Google AdSense. Free 47-point audit — content, policies, SEO, security & performance — in under 20 seconds." />
         <meta property="og:url" content="https://adsense-boost-check.lovable.app/" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify(websiteSchema())}</script>
+        <script type="application/ld+json">{JSON.stringify(softwareApplicationSchema())}</script>
       </Helmet>
 
       <NewHero url={url} onUrlChange={setUrl} onCheck={handleCheck} isChecking={isChecking} />
@@ -138,6 +144,7 @@ const Index = () => {
 
       <HowItWorks />
       <AuditCategories />
+      <DeepContent />
       <LiveResultDemo />
       <WhyChooseUs />
       <ToolsHubPreview />
@@ -145,6 +152,8 @@ const Index = () => {
       <FAQ />
       <Testimonials />
       <CTABanner />
+      <StickyCTA />
+      <ExitIntentModal />
     </SiteLayout>
   );
 };

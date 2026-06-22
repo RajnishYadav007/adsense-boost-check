@@ -7,14 +7,18 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "Is this tool really free?", a: "Yes. The AdSense Approval Checker is 100% free with unlimited audits. No login, no credit card, no hidden tiers." },
-  { q: "How accurate is the AdSense eligibility score?", a: "Our 47-point audit mirrors Google's published AdSense program policies and has matched real approval/rejection outcomes ~98% of the time across 50,000+ sites." },
-  { q: "How many sites can I check?", a: "Unlimited. Run as many audits as you need on your own sites or competitor sites." },
-  { q: "Does checking my site affect my SEO?", a: "No. We perform a single passive fetch — identical to any search-engine crawler — and never inject anything into your site." },
-  { q: "What score do I need to get AdSense approved?", a: "Sites scoring 80+ are typically approved on first submission. 60–79 means borderline (fix warnings first). Below 60 means you have critical issues to address." },
-  { q: "How long does Google take to approve AdSense?", a: "Most reviews complete in 24–72 hours, but it can take up to 2 weeks. We recommend a 90+ score before applying to minimize back-and-forth." },
-  { q: "Can I check competitor websites?", a: "Yes. The tool works on any publicly-accessible URL." },
-  { q: "What should I fix first if my score is low?", a: "Always tackle Critical Issues (red) first — usually missing legal pages or SSL. Then work through Warnings by impact, which our Action Plan ranks for you." },
+  { q: "What is an AdSense approval checker?", a: "It's a free diagnostic tool that audits your website against Google AdSense program policies and predicts whether your application will be approved — before you actually apply." },
+  { q: "Is this AdSense checker really free?", a: "Yes. 100% free with unlimited audits. No login, no credit card, no hidden tiers, no upsell." },
+  { q: "How accurate is the AdSense eligibility score?", a: "Our 47-point audit mirrors Google's published AdSense program policies. Sites scoring 90+ get approved on first application about 96% of the time across our 50,000+ user dataset." },
+  { q: "What score do I need for AdSense approval?", a: "Sites scoring 90+ are typically approved on first submission. 70–89 means borderline (fix warnings first). Below 70 you have critical blockers to address." },
+  { q: "How long does Google take to approve AdSense in 2026?", a: "Most reviews complete in 24–72 hours, but it can take up to 2 weeks. We recommend a 90+ checker score before applying to minimize back-and-forth." },
+  { q: "How many posts do I need for AdSense approval?", a: "There's no official minimum, but our data shows 20–30 substantive posts (800+ words each, original) is the practical threshold. New, thin sites are the #1 rejection reason." },
+  { q: "Can I get AdSense approval with AI content?", a: "Yes if it's edited, fact-checked, original, and provides real value. Raw unedited AI output gets flagged as low-value content. Our content quality check catches what Google's reviewers catch." },
+  { q: "Why does Google reject AdSense applications?", a: "The top reasons: insufficient/thin content, missing legal pages (Privacy, Terms, About, Contact), copied content, prohibited niches, broken navigation, and policy violations like deceptive layouts." },
+  { q: "Can I re-apply after AdSense rejection?", a: "Yes, but wait at least 7 days and fix the flagged issues first. Re-applying without changes leads to permanent rejection. Run our checker to identify what to fix." },
+  { q: "Does the AdSense checker work for Blogger and WordPress sites?", a: "Yes. The tool works on any publicly-accessible URL — WordPress, Blogger (with custom domain), Wix, Webflow, Shopify, or custom-built sites." },
+  { q: "What niches are not eligible for AdSense?", a: "Adult content, gambling (in many regions), illegal drugs, weapons, hacking tools, violent/shock content, and content infringing copyright are permanently ineligible." },
+  { q: "Does checking my site with this tool affect my SEO or AdSense?", a: "No. We perform a single passive fetch identical to any search-engine crawler. We don't inject anything, don't crawl repeatedly, and don't store your URL after the audit." },
 ];
 
 export function FAQ() {

@@ -28,6 +28,7 @@ import WebsiteQualityScoreChecker from "./pages/tools/WebsiteQualityScoreChecker
 import ContentQualityChecker from "./pages/tools/ContentQualityChecker";
 import SeoAuditChecker from "./pages/tools/SeoAuditChecker";
 import NotFound from "./pages/NotFound";
+import GuideDetail from "./pages/GuideDetail";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/tools/seo-checklist" element={<SEOChecklist />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/guides" element={<Guides />} />
+          <Route path="/guides/:slug" element={<GuideDetail />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

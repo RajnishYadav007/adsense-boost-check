@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import {
   ShieldCheck, Calculator, FileWarning, DollarSign, AlertTriangle,
-  Gauge, FileText, Search, ListChecks, FilePen, ArrowRight, Sparkles
+  Gauge, FileText, Search, ListChecks, FilePen, ArrowRight, Sparkles, TrendingUp
 } from "lucide-react";
 
 const tools = [
@@ -12,6 +12,12 @@ const tools = [
     title: "AdSense Approval Checker",
     desc: "Audit any website against 47+ Google AdSense policy points and predict your approval probability in 20 seconds.",
     badge: "Most popular",
+  },
+  {
+    to: "/tools/high-cpc-opportunity-finder", icon: TrendingUp,
+    title: "High CPC Page Opportunity Finder",
+    desc: "Crawl your whole site and find the pages with the highest AdSense earning potential, plus missing high-CPC niches.",
+    badge: "New",
   },
   {
     to: "/tools/adsense-approval-calculator", icon: Calculator,

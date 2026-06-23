@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const toolLinks = [
   { to: "/tools", label: "All Tools" },
   { to: "/tools/adsense-approval-checker", label: "AdSense Approval Checker" },
+  { to: "/tools/high-cpc-opportunity-finder", label: "High CPC Opportunity Finder" },
   { to: "/tools/adsense-approval-calculator", label: "Approval Score Calculator" },
   { to: "/tools/adsense-policy-checker", label: "Policy Checker" },
   { to: "/tools/adsense-rejection-analyzer", label: "Rejection Analyzer" },

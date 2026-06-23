@@ -27,6 +27,7 @@ import AdsenseRejectionAnalyzer from "./pages/tools/AdsenseRejectionAnalyzer";
 import WebsiteQualityScoreChecker from "./pages/tools/WebsiteQualityScoreChecker";
 import ContentQualityChecker from "./pages/tools/ContentQualityChecker";
 import SeoAuditChecker from "./pages/tools/SeoAuditChecker";
+import HighCpcOpportunityFinder from "./pages/tools/HighCpcOpportunityFinder";
 import NotFound from "./pages/NotFound";
 import GuideDetail from "./pages/GuideDetail";
 import Auth from "./pages/Auth";
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/tools/website-quality-score-checker" element={<WebsiteQualityScoreChecker />} />
           <Route path="/tools/content-quality-checker" element={<ContentQualityChecker />} />
           <Route path="/tools/seo-audit-checker" element={<SeoAuditChecker />} />
+          <Route path="/tools/high-cpc-opportunity-finder" element={<HighCpcOpportunityFinder />} />
           <Route path="/tools/policy-page-generator" element={<PolicyGenerator />} />
           <Route path="/tools/seo-checklist" element={<SEOChecklist />} />
           <Route path="/blog" element={<Blog />} />

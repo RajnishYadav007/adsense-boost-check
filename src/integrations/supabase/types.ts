@@ -273,6 +273,66 @@ export type Database = {
         }
         Relationships: []
       }
+      cpc_scans: {
+        Row: {
+          blog_posts: number
+          categories: number
+          created_at: string
+          domain: string
+          error: string | null
+          est_monthly_revenue_ceiling: number
+          id: string
+          landing_pages: number
+          opportunity_score: number
+          primary_niche: string | null
+          report: Json
+          status: string
+          tags: number
+          total_pages: number
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          blog_posts?: number
+          categories?: number
+          created_at?: string
+          domain: string
+          error?: string | null
+          est_monthly_revenue_ceiling?: number
+          id?: string
+          landing_pages?: number
+          opportunity_score?: number
+          primary_niche?: string | null
+          report?: Json
+          status?: string
+          tags?: number
+          total_pages?: number
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          blog_posts?: number
+          categories?: number
+          created_at?: string
+          domain?: string
+          error?: string | null
+          est_monthly_revenue_ceiling?: number
+          id?: string
+          landing_pages?: number
+          opportunity_score?: number
+          primary_niche?: string | null
+          report?: Json
+          status?: string
+          tags?: number
+          total_pages?: number
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guides: {
         Row: {
           body: string

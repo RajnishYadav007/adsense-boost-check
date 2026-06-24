@@ -16,7 +16,6 @@ import { Testimonials } from "@/components/home/Testimonials";
 import { CTABanner } from "@/components/home/CTABanner";
 import { DeepContent } from "@/components/home/DeepContent";
 import { StickyCTA } from "@/components/StickyCTA";
-import { ExitIntentModal } from "@/components/ExitIntentModal";
 import { supabase } from "@/integrations/supabase/client";
 import { softwareApplicationSchema, websiteSchema } from "@/lib/schema";
 import { toast } from "sonner";
@@ -165,7 +164,6 @@ const Index = () => {
       <Testimonials />
       <CTABanner />
       <StickyCTA />
-      <ExitIntentModal />
     </SiteLayout>
   );
 };

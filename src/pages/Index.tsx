@@ -15,7 +15,7 @@ import { FAQ } from "@/components/home/FAQ";
 import { Testimonials } from "@/components/home/Testimonials";
 import { CTABanner } from "@/components/home/CTABanner";
 import { DeepContent } from "@/components/home/DeepContent";
-import { StickyCTA } from "@/components/StickyCTA";
+
 import { supabase } from "@/integrations/supabase/client";
 import { softwareApplicationSchema, websiteSchema } from "@/lib/schema";
 import { toast } from "sonner";

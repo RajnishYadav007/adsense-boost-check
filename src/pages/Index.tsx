@@ -163,7 +163,7 @@ const Index = () => {
       <FAQ />
       <Testimonials />
       <CTABanner />
-      <StickyCTA />
+      
     </SiteLayout>
   );
 };

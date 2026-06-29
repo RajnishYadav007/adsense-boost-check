@@ -9,6 +9,26 @@
 //   6. Pass a content sample to Lovable AI (Gemini Flash) to score originality & policy risk
 //   7. Score is weighted; hard blockers cap the final approval probability
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+function isSafeUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (!["http:", "https:"].includes(u.protocol)) return false;
+    const host = u.hostname.toLowerCase();
+    if (/^(localhost|0\.0\.0\.0|::1)$/.test(host)) return false;
+    if (/^127\./.test(host)) return false;
+    if (/^10\./.test(host)) return false;
+    if (/^192\.168\./.test(host)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+    if (/^169\.254\./.test(host)) return false;
+    if (/^(fc00:|fd|fe80:)/i.test(host)) return false;
+    if (host.endsWith(".local") || host.endsWith(".internal")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type Status = "pass" | "fail" | "warning";
 interface Check { name: string; status: Status; message: string; weight: number; }

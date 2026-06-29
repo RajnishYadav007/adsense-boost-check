@@ -58,6 +58,10 @@ function normaliseUrl(input: string): string {
 }
 
 async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD" = "GET"): Promise<Response | null> {
+  if (!isSafeUrl(url)) {
+    console.log("blocked unsafe url", url);
+    return null;
+  }
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);

@@ -9,6 +9,26 @@
 //   6. Pass a content sample to Lovable AI (Gemini Flash) to score originality & policy risk
 //   7. Score is weighted; hard blockers cap the final approval probability
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+function isSafeUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (!["http:", "https:"].includes(u.protocol)) return false;
+    const host = u.hostname.toLowerCase();
+    if (/^(localhost|0\.0\.0\.0|::1)$/.test(host)) return false;
+    if (/^127\./.test(host)) return false;
+    if (/^10\./.test(host)) return false;
+    if (/^192\.168\./.test(host)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false;
+    if (/^169\.254\./.test(host)) return false;
+    if (/^(fc00:|fd|fe80:)/i.test(host)) return false;
+    if (host.endsWith(".local") || host.endsWith(".internal")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type Status = "pass" | "fail" | "warning";
 interface Check { name: string; status: Status; message: string; weight: number; }
@@ -38,6 +58,10 @@ function normaliseUrl(input: string): string {
 }
 
 async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD" = "GET"): Promise<Response | null> {
+  if (!isSafeUrl(url)) {
+    console.log("blocked unsafe url", url);
+    return null;
+  }
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -186,11 +210,29 @@ ${promptBody}`,
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    // Auth guard — require a signed-in user
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: userData, error: userErr } = await sb.auth.getUser();
+    if (userErr || !userData?.user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
     const body = await req.json().catch(() => ({}));
     const rawUrl: string = body?.url || "";
     if (!rawUrl || typeof rawUrl !== "string") return json({ error: "Provide a website URL" }, 400);
 
     const url = normaliseUrl(rawUrl);
+    if (!isSafeUrl(url)) {
+      return json({ error: "URL is not allowed (private, loopback, or invalid host)." }, 400);
+    }
     const origin = new URL(url).origin;
     const host = new URL(url).hostname;
 

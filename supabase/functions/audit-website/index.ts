@@ -210,11 +210,29 @@ ${promptBody}`,
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    // Auth guard — require a signed-in user
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: userData, error: userErr } = await sb.auth.getUser();
+    if (userErr || !userData?.user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
     const body = await req.json().catch(() => ({}));
     const rawUrl: string = body?.url || "";
     if (!rawUrl || typeof rawUrl !== "string") return json({ error: "Provide a website URL" }, 400);
 
     const url = normaliseUrl(rawUrl);
+    if (!isSafeUrl(url)) {
+      return json({ error: "URL is not allowed (private, loopback, or invalid host)." }, 400);
+    }
     const origin = new URL(url).origin;
     const host = new URL(url).hostname;
 

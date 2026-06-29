@@ -20,6 +20,11 @@ import Blog from "./pages/Blog";
 import Guides from "./pages/Guides";
 import EditorialPolicy from "./pages/EditorialPolicy";
 import ReviewProcess from "./pages/ReviewProcess";
+import FactCheckingPolicy from "./pages/FactCheckingPolicy";
+import CorrectionsPolicy from "./pages/CorrectionsPolicy";
+import AIUsagePolicy from "./pages/AIUsagePolicy";
+import Team from "./pages/Team";
+import AuthorProfile from "./pages/AuthorProfile";
 import AdsenseApprovalCheckerTool from "./pages/tools/AdsenseApprovalCheckerTool";
 import AdsenseApprovalCalculator from "./pages/tools/AdsenseApprovalCalculator";
 import AdsensePolicyChecker from "./pages/tools/AdsensePolicyChecker";
@@ -69,6 +74,12 @@ const App = () => (
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/editorial-policy" element={<EditorialPolicy />} />
           <Route path="/review-process" element={<ReviewProcess />} />
+          <Route path="/fact-checking-policy" element={<FactCheckingPolicy />} />
+          <Route path="/corrections-policy" element={<CorrectionsPolicy />} />
+          <Route path="/ai-usage-policy" element={<AIUsagePolicy />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/authors" element={<Team />} />
+          <Route path="/authors/:slug" element={<AuthorProfile />} />
           <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,107 +1,131 @@
-import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { SiteLayout } from "@/components/layout/SiteLayout";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Mail, MapPin, MessageSquare } from "lucide-react";
-import { toast } from "sonner";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-
-const schema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Valid email required").max(255),
-  subject: z.string().trim().max(150).optional().default(""),
-  message: z.string().trim().min(10, "Message must be at least 10 chars").max(4000),
-});
+import { Card } from "@/components/ui/card";
+import { Mail, Shield, Scale, Pencil, MapPin, Phone } from "lucide-react";
+import { Placeholder } from "@/components/eeat/Placeholder";
+import { eeat, isMissing } from "@/config/eeat";
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-  const [loading, setLoading] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
-    setLoading(true);
-    const payload = {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: parsed.data.subject ?? "",
-      message: parsed.data.message,
-    };
-    const { error } = await supabase.from("contact_submissions").insert(payload);
-    setLoading(false);
-    if (error) {
-      toast.error("Could not send message. Try again.");
-      return;
-    }
-    toast.success("Message sent. We'll reply within 2 business days.");
-    setForm({ name: "", email: "", subject: "", message: "" });
-  };
+  const c = eeat.company;
+  const channels = [
+    {
+      icon: Mail,
+      label: "General",
+      value: c.contactEmail,
+      placeholder: "Contact Email",
+    },
+    {
+      icon: Pencil,
+      label: "Editorial & corrections",
+      value: c.editorialEmail,
+      placeholder: "Editorial Email",
+    },
+    {
+      icon: Shield,
+      label: "Privacy",
+      value: c.privacyEmail,
+      placeholder: "Privacy Email",
+    },
+    {
+      icon: Scale,
+      label: "Legal & DMCA",
+      value: c.legalEmail,
+      placeholder: "Legal Email",
+    },
+  ];
 
   return (
     <SiteLayout>
       <Helmet>
-        <title>Contact — AdSense Approval Checker</title>
-        <meta name="description" content="Reach the AdSense Approval Checker team for support, partnerships, or feedback. We respond within two business days." />
-        <link rel="canonical" href="https://adsense-boost-check.lovable.app/contact" />
+        <title>Contact — {c.brandName}</title>
+        <meta
+          name="description"
+          content={`How to reach ${c.brandName} for support, editorial, privacy, or legal enquiries.`}
+        />
+        <link
+          rel="canonical"
+          href="https://adsense-boost-check.lovable.app/contact"
+        />
       </Helmet>
 
-      <section className="container mx-auto px-4 py-16 max-w-5xl">
-        <header className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Contact us</h1>
-          <p className="text-muted-foreground">Questions, partnerships, feedback — we read everything.</p>
-        </header>
+      <section className="container mx-auto px-4 py-16 max-w-4xl">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact us</h1>
+        <p className="text-lg text-muted-foreground mb-10 max-w-2xl">
+          We answer every email. Pick the channel that matches your enquiry.
+        </p>
 
-        <div className="grid gap-8 md:grid-cols-[1fr,360px]">
-          <form onSubmit={submit} className="glass-card rounded-2xl p-6 space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="mb-1.5 block">Name</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+        <div className="grid gap-4 md:grid-cols-2">
+          {channels.map(({ icon: Icon, label, value, placeholder }) => (
+            <Card key={label} className="p-6 glass-card">
+              <div className="flex items-start gap-3">
+                <Icon className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <div className="font-semibold">{label}</div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {value ? (
+                      <a
+                        href={`mailto:${value}`}
+                        className="text-primary underline"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <Placeholder value={value} label={placeholder} />
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="mb-1.5 block">Email</Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-              </div>
-            </div>
-            <div>
-              <Label className="mb-1.5 block">Subject</Label>
-              <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-            </div>
-            <div>
-              <Label className="mb-1.5 block">Message</Label>
-              <Textarea rows={6} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
-            </div>
-            <Button type="submit" disabled={loading} className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto">
-              {loading ? "Sending..." : "Send message"}
-            </Button>
-          </form>
-
-          <aside className="space-y-4">
-            <div className="glass-card rounded-2xl p-5">
-              <Mail className="h-5 w-5 text-primary mb-2" />
-              <div className="font-medium">Email</div>
-              <div className="text-sm text-muted-foreground">hello@adsenseapprovalchecker.net</div>
-            </div>
-            <div className="glass-card rounded-2xl p-5">
-              <MessageSquare className="h-5 w-5 text-primary mb-2" />
-              <div className="font-medium">Response time</div>
-              <div className="text-sm text-muted-foreground">Within 2 business days</div>
-            </div>
-            <div className="glass-card rounded-2xl p-5">
-              <MapPin className="h-5 w-5 text-primary mb-2" />
-              <div className="font-medium">Location</div>
-              <div className="text-sm text-muted-foreground">Remote, worldwide</div>
-            </div>
-          </aside>
+            </Card>
+          ))}
         </div>
+
+        <Card className="p-6 glass-card mt-6">
+          <div className="flex items-start gap-3">
+            <MapPin className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <div className="font-semibold">Postal address</div>
+              <address className="not-italic text-sm text-muted-foreground mt-1 leading-relaxed">
+                <Placeholder value={c.legalName} label="Legal Company Name" />
+                <br />
+                <Placeholder value={c.addressLine1} label="Street Address" />
+                {!isMissing(c.addressLine2) && (
+                  <>
+                    <br />
+                    {c.addressLine2}
+                  </>
+                )}
+                <br />
+                <Placeholder value={c.city} label="City" />,{" "}
+                <Placeholder value={c.region} label="State / Region" />{" "}
+                <Placeholder value={c.postalCode} label="Postal Code" />
+                <br />
+                <Placeholder value={c.country} label="Country" />
+              </address>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 glass-card mt-6">
+          <div className="flex items-start gap-3">
+            <Phone className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <div className="font-semibold">Phone</div>
+              <div className="text-sm text-muted-foreground mt-1">
+                <Placeholder value={c.phone} label="Phone (optional)" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <p className="text-sm text-muted-foreground mt-8">
+          Response time: we aim to reply to every email within two business
+          days. For factual errors, please use the Editorial address and
+          include the article URL and source — see our{" "}
+          <a href="/corrections-policy" className="text-primary underline">
+            Corrections Policy
+          </a>
+          .
+        </p>
       </section>
     </SiteLayout>
   );

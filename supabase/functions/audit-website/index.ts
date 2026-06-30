@@ -210,20 +210,9 @@ ${promptBody}`,
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    // Auth guard — require a signed-in user
-    const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-    const sb = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: userData, error: userErr } = await sb.auth.getUser();
-    if (userErr || !userData?.user) {
-      return json({ error: "Unauthorized" }, 401);
-    }
+    // Public endpoint — SSRF protection via isSafeUrl below is the security boundary.
+
+
 
     const body = await req.json().catch(() => ({}));
     const rawUrl: string = body?.url || "";

@@ -9,7 +9,7 @@
 //   6. Pass a content sample to Lovable AI (Gemini Flash) to score originality & policy risk
 //   7. Score is weighted; hard blockers cap the final approval probability
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { createClient } from "npm:@supabase/supabase-js@2";
+
 
 function isSafeUrl(raw: string): boolean {
   try {

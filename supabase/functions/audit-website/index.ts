@@ -222,8 +222,9 @@ Deno.serve(async (req) => {
     if (!isSafeUrl(url)) {
       return json({ error: "URL is not allowed (private, loopback, or invalid host)." }, 400);
     }
-    const origin = new URL(url).origin;
-    const host = new URL(url).hostname;
+    let origin = new URL(url).origin;
+    let host = new URL(url).hostname;
+
 
     // 1. Homepage — try variants (www/apex, http fallback) before giving up
     const candidates = [url];

@@ -293,10 +293,12 @@ Deno.serve(async (req) => {
       return json({
         error: blocked
           ? `${hostname} blocked our audit request (HTTP ${status}). This is usually a firewall/CDN bot rule (Cloudflare "Bot Fight Mode", security plugin, or country block). Allow Googlebot/AdsBot-Google in your firewall — Google's crawler needs the same access — then re-run the audit.`
+          : status === 401
+          ? `${hostname} is password-protected (HTTP 401). Your site is behind HTTP auth, a "coming soon"/maintenance mode plugin, or host-level deployment protection. AdSense can't review a private site — make it publicly viewable, then re-run the audit.`
           : status
           ? `${hostname} responded with HTTP ${status}. The page must be publicly accessible (not password-protected or returning an error) to be audited.`
+          : `We couldn't connect to ${hostname}. The domain may not exist yet, its DNS isn't resolving, or the server is down. Double-check the spelling and try again once the site loads in a browser.`,
 
-          : `We couldn't connect to ${new URL(url).hostname}. The domain may not exist yet, its DNS isn't resolving, or the server is down. Double-check the spelling and try again once the site loads in a browser.`,
       }, 400);
     }
     const finalUrl = homepageRes.url;

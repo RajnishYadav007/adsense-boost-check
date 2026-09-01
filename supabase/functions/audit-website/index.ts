@@ -57,11 +57,23 @@ function normaliseUrl(input: string): string {
   return u.replace(/\/+$/, "");
 }
 
-async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD" = "GET"): Promise<Response | null> {
-  if (!isSafeUrl(url)) {
-    console.log("blocked unsafe url", url);
-    return null;
-  }
+// Some hosts (Cloudflare, WAFs) block unknown crawlers. Try a normal browser first,
+// then Googlebot / AdsBot — which most AdSense-ready sites explicitly allow.
+const UA_POOL = [
+  UA,
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+  "Mozilla/5.0 (Linux; Android 5.0; SM-G920A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36 (compatible; AdsBot-Google-Mobile; +http://www.google.com/mobile/adsbot.html)",
+];
+
+const BLOCKED_STATUSES = new Set([403, 406, 409, 429, 503]);
+
+async function fetchOnce(
+  url: string,
+  timeoutMs: number,
+  method: "GET" | "HEAD",
+  ua: string,
+): Promise<Response | null> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -69,15 +81,42 @@ async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD"
       method,
       redirect: "follow",
       signal: ctrl.signal,
-      headers: { "User-Agent": UA, "Accept": "text/html,application/xhtml+xml,*/*", "Accept-Language": "en-US,en;q=0.9" },
+      headers: {
+        "User-Agent": ua,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Cache-Control": "no-cache",
+      },
     });
     clearTimeout(t);
     return res;
   } catch (e) {
-    console.log("fetch failed", url, (e as Error).message);
+    console.log("fetch failed", url, ua.slice(0, 24), (e as Error).message);
     return null;
   }
 }
+
+async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD" = "GET"): Promise<Response | null> {
+  if (!isSafeUrl(url)) {
+    console.log("blocked unsafe url", url);
+    return null;
+  }
+  let last: Response | null = null;
+  for (const ua of UA_POOL) {
+    const res = await fetchOnce(url, timeoutMs, method, ua);
+    if (res && res.ok) return res;
+    if (res) last = res;
+    // Only bother rotating UA when the failure looks like bot blocking
+    if (res && !BLOCKED_STATUSES.has(res.status)) return res;
+  }
+  return last;
+}
+
 
 function stripTags(html: string): string {
   return html

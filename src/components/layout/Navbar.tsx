@@ -131,7 +131,7 @@ export function Navbar() {
         </div>
       </nav>
 
-      {open && (
+      {open && createPortal(
         <div className="lg:hidden fixed inset-0 z-[100] h-dvh w-full bg-background animate-in fade-in overflow-y-auto">
           <div className="sticky top-0 bg-background border-b border-border/60">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -179,7 +179,8 @@ export function Navbar() {
               </Link>
             ))}
           </nav>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Menu, X, ShieldCheck, ChevronDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -49,6 +50,13 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   return (
     <header
@@ -123,19 +131,21 @@ export function Navbar() {
         </div>
       </nav>
 
-      {open && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-xl animate-in fade-in">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <span className="font-heading font-bold">Menu</span>
-            <button
-              onClick={() => setOpen(false)}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-secondary"
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
+      {open && createPortal(
+        <div className="lg:hidden fixed inset-0 z-[100] h-dvh w-full bg-background animate-in fade-in overflow-y-auto">
+          <div className="sticky top-0 bg-background border-b border-border/60">
+            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+              <span className="font-heading font-bold">Menu</span>
+              <button
+                onClick={() => setOpen(false)}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-secondary"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-          <nav className="container mx-auto px-4 pt-4 flex flex-col gap-1">
+          <nav className="container mx-auto px-4 pt-4 pb-10 flex flex-col gap-1">
             {mainLinks.map((l) => (
               <Link
                 key={l.to}
@@ -169,7 +179,8 @@ export function Navbar() {
               </Link>
             ))}
           </nav>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

@@ -68,6 +68,14 @@ const UA_POOL = [
 
 const BLOCKED_STATUSES = new Set([403, 406, 409, 429, 503]);
 
+function shouldRetryWithAnotherUserAgent(res: Response): boolean {
+  if (BLOCKED_STATUSES.has(res.status)) return true;
+  // Some WAFs return a synthetic 401 to unknown crawlers without issuing an
+  // HTTP authentication challenge. A genuine password-protected site includes
+  // WWW-Authenticate and must remain a hard failure.
+  return res.status === 401 && !res.headers.has("www-authenticate");
+}
+
 async function fetchOnce(
   url: string,
   timeoutMs: number,
@@ -111,8 +119,9 @@ async function safeFetch(url: string, timeoutMs = 10_000, method: "GET" | "HEAD"
     const res = await fetchOnce(url, timeoutMs, method, ua);
     if (res && res.ok) return res;
     if (res) last = res;
-    // Only bother rotating UA when the failure looks like bot blocking
-    if (res && !BLOCKED_STATUSES.has(res.status)) return res;
+    // Rotate only when the response looks like bot/WAF blocking. This avoids
+    // misreporting synthetic 401 responses as password protection.
+    if (res && !shouldRetryWithAnotherUserAgent(res)) return res;
   }
   return last;
 }

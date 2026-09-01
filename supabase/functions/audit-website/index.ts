@@ -256,6 +256,8 @@ Deno.serve(async (req) => {
       }, 400);
     }
     const finalUrl = homepageRes.url;
+    try { origin = new URL(finalUrl).origin; host = new URL(finalUrl).hostname; } catch { /* keep */ }
+
 
     const html = await homepageRes.text();
     const lower = html.toLowerCase();

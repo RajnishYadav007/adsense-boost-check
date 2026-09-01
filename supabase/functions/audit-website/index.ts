@@ -222,17 +222,43 @@ Deno.serve(async (req) => {
     if (!isSafeUrl(url)) {
       return json({ error: "URL is not allowed (private, loopback, or invalid host)." }, 400);
     }
-    const origin = new URL(url).origin;
-    const host = new URL(url).hostname;
+    let origin = new URL(url).origin;
+    let host = new URL(url).hostname;
 
-    // 1. Homepage
-    const homepageRes = await safeFetch(url, 12_000);
+
+    // 1. Homepage — try variants (www/apex, http fallback) before giving up
+    const candidates = [url];
+    try {
+      const u = new URL(url);
+      const alt = new URL(url);
+      alt.hostname = u.hostname.startsWith("www.") ? u.hostname.slice(4) : `www.${u.hostname}`;
+      candidates.push(alt.toString());
+      const httpU = new URL(url); httpU.protocol = "http:";
+      candidates.push(httpU.toString());
+      const httpAlt = new URL(alt.toString()); httpAlt.protocol = "http:";
+      candidates.push(httpAlt.toString());
+    } catch { /* ignore */ }
+
+    let homepageRes: Response | null = null;
+    for (const candidate of candidates) {
+      if (!isSafeUrl(candidate)) continue;
+      const res = await safeFetch(candidate, 12_000);
+      if (res && res.ok) { homepageRes = res; break; }
+      if (res && !homepageRes) homepageRes = res; // keep last error status
+    }
+
     if (!homepageRes || !homepageRes.ok) {
+      const status = homepageRes?.status;
       return json({
-        error: `Could not reach ${url} (status ${homepageRes?.status ?? "no response"}). Make sure the site is public and reachable.`,
+        error: status
+          ? `${new URL(url).hostname} responded with HTTP ${status}. The page must be publicly accessible (not blocked, password-protected, or returning an error) to be audited.`
+          : `We couldn't connect to ${new URL(url).hostname}. The domain may not exist yet, its DNS isn't resolving, or the server is down. Double-check the spelling and try again once the site loads in a browser.`,
       }, 400);
     }
     const finalUrl = homepageRes.url;
+    try { origin = new URL(finalUrl).origin; host = new URL(finalUrl).hostname; } catch { /* keep */ }
+
+
     const html = await homepageRes.text();
     const lower = html.toLowerCase();
     const homepageText = stripTags(html);
